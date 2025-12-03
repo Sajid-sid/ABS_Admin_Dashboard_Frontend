@@ -1,0 +1,127 @@
+.subcategory-container {
+  max-width: 850px;
+  margin: 40px auto;
+  background: #f8f9fa;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+}
+
+.subcategory-title {
+  text-align: center;
+  margin-bottom: 25px;
+  font-size: 26px;
+  color: #222;
+  font-weight: 600;
+}
+
+.subcategory-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.subcategory-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 25px;
+}
+
+.subcategory-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.subcategory-field label {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.subcategory-field input,
+.subcategory-field textarea,
+.subcategory-field select {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+  width: 100%;
+}
+
+.subcategory-field textarea {
+  resize: none;
+  height: 90px;
+}
+
+/* 👇 Added gap class for spacing between rows */
+.subcategory-gap {
+  height: 20px;
+}
+
+.subcategory-btn {
+  background: #007bff;
+  color: white;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  transition: 0.3s ease;
+}
+
+.subcategory-btn:hover {
+  background: #0056b3;
+}
+
+@media (max-width: 768px) {
+  .subcategory-row {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .subcategory-container {
+    padding: 20px;
+  }
+
+  .subcategory-btn {
+    font-size: 15px;
+  }
+}
+
+/* ensure editor content area fixed height */
+.ck-editor__editable_inline {
+  min-height: 300px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* preview box */
+.subcategory-preview {
+  margin-top: 20px;
+  border: 1px solid #e2e2e2;
+  padding: 12px;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.preview-content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* make the description field full width in form */
+.subcategory-field.full-width {
+  width: 100%;
+}
+
+/* hint text */
+.hint {
+  display: block;
+  font-size: 12px;
+  color: #666;
+  margin-top: 6px;
+}

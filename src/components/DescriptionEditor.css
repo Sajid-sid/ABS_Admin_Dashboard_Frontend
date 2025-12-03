@@ -1,0 +1,5 @@
+.description-wrapper { max-width: 900px; margin: 8px 0; }
+.description-label { display:block; margin-bottom:6px; font-weight:600; color:#444; }
+.ck-editor__editable_inline {
+  min-height: 200px;
+}
