@@ -1,6 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react"; 
 import axios from "axios";
 import "./StockInformation.css";
+
+// ✅ Load from .env
+const BASE_URL = import.meta.env.VITE_API_URL;
+const API_URL = `${BASE_URL}/api`;
 
 export default function StockInformation() {
   const [categories, setCategories] = useState([]);
@@ -20,28 +24,28 @@ export default function StockInformation() {
   }, []);
 
   const loadData = async () => {
-  try {
-    const catRes = await axios.get("http://localhost:4000/api/productCategories");
-    const subRes = await axios.get("http://localhost:4000/api/subcategories");
+    try {
+      const catRes = await axios.get(`${API_URL}/productCategories`);
+      const subRes = await axios.get(`${API_URL}/subcategories`);
 
-    const subList = subRes.data;
+      const subList = subRes.data;
 
-    // 🔥 Fetch stock for each subcategoryId
-    const subListWithStock = await Promise.all(
-      subList.map(async (item) => {
-        const stock = await fetchStockById(item.id);
-        return { ...item, stock };
-      })
-    );
+      // 🔥 Fetch stock for each subcategoryId
+      const subListWithStock = await Promise.all(
+        subList.map(async (item) => {
+          const stock = await fetchStockById(item.id);
+          return { ...item, stock };
+        })
+      );
 
-    setCategories(catRes.data);
-    setSubcategories(subListWithStock);
-    setLoading(false);
-  } catch (err) {
-    console.error("Error fetching:", err);
-    setLoading(false);
-  }
-};
+      setCategories(catRes.data);
+      setSubcategories(subListWithStock);
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching:", err);
+      setLoading(false);
+    }
+  };
 
 
   const categoryList = [...new Set(categories.map((c) => c.productCategory))];
@@ -65,39 +69,39 @@ export default function StockInformation() {
   };
 
   // 🔥 Update stock API
- const updateStock = async () => {
-  if (!stockValue || isNaN(stockValue)) {
-    alert("Enter valid stock quantity");
-    return;
-  }
+  const updateStock = async () => {
+    if (!stockValue || isNaN(stockValue)) {
+      alert("Enter valid stock quantity");
+      return;
+    }
 
-  try {
-    await axios.post("http://localhost:4000/api/stock/updateStock", {
-      subcategoryId: selectedProduct.id,
-      stock: Number(stockValue),
-    });
+    try {
+      await axios.post(`${API_URL}/stock/updateStock`, {
+        subcategoryId: selectedProduct.id,
+        stock: Number(stockValue),
+      });
 
-    alert("Stock Updated Successfully!");
-    setShowModal(false);
-    loadData(); 
-  } catch (err) {
-    console.error("Stock update error:", err);
-    alert("Failed to update stock");
-  }
-};
-// 🔥 Fetch stock for one subcategory
-const fetchStockById = async (subcategoryId) => {
-  try {
-    const res = await axios.get(
-      `http://localhost:4000/api/stock/getStockById?subcategoryId=${subcategoryId}`
-    );
-    return res.data.totalStock ?? 0;
-  } catch (err) {
-    console.error("Error fetching stock:", err);
-    return 0;
-  }
-};
+      alert("Stock Updated Successfully!");
+      setShowModal(false);
+      loadData();
+    } catch (err) {
+      console.error("Stock update error:", err);
+      alert("Failed to update stock");
+    }
+  };
 
+  // 🔥 Fetch stock for one subcategory
+  const fetchStockById = async (subcategoryId) => {
+    try {
+      const res = await axios.get(
+        `${API_URL}/stock/getStockById?subcategoryId=${subcategoryId}`
+      );
+      return res.data.totalStock ?? 0;
+    } catch (err) {
+      console.error("Error fetching stock:", err);
+      return 0;
+    }
+  };
 
   return (
     <div className="stock-container">
