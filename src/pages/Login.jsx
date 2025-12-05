@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { loginSuccess } from "../redux/authSlice";
 import "./Login.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+
 
 const API_URL = import.meta.env.VITE_API_URL; // ✅ Read env variable
 
@@ -13,7 +16,7 @@ const Login = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
+  const [showPassword, setShowPassword] = useState(false);
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -60,13 +63,23 @@ const Login = () => {
         />
 
         <label>Password</label>
-        <input
-          type="password"
-          placeholder="Enter password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+        <div className="password-wrapper">
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Enter password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          <FontAwesomeIcon
+            icon={showPassword ? faEyeSlash : faEye}
+            className="eye-icon"
+            onClick={() => setShowPassword(!showPassword)}
+          />
+        </div>
+
+
 
         <button type="submit" disabled={loading}>
           {loading ? "Logging in..." : "Login"}
