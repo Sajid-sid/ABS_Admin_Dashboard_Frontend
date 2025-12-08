@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"; 
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./StockInformation.css";
 
@@ -14,10 +14,44 @@ export default function StockInformation() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
 
-  // 🔥 Stock update states
   const [showModal, setShowModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [stockValue, setStockValue] = useState("");
+
+  // ⭐ NEW — Fetch Confirmed + Pending counts
+  const fetchBookingCounts = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/orders`);
+      const orders = res.data.orders || [];
+
+      const countMap = {}; // productName → { confirmed, pending }
+
+      orders.forEach((order) => {
+        const status = order.orderStatus; // "Confirmed" or "Pending"
+        if (!Array.isArray(order.items)) return;
+
+        order.items.forEach((item) => {
+          const name = item.productName;
+          if (!name) return;
+
+          if (!countMap[name]) {
+            countMap[name] = { confirmed: 0, pending: 0 };
+          }
+
+          if (status === "Confirmed") {
+            countMap[name].confirmed += item.quantity;
+          } else if (status === "Pending") {
+            countMap[name].pending += item.quantity;
+          }
+        });
+      });
+
+      return countMap;
+    } catch (err) {
+      console.error("Error fetching booking counts:", err);
+      return {};
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -28,13 +62,30 @@ export default function StockInformation() {
       const catRes = await axios.get(`${API_URL}/productCategories`);
       const subRes = await axios.get(`${API_URL}/subcategories`);
 
+      // ⭐ NEW — Fetch Confirmed + Pending counts
+      const bookingCounts = await fetchBookingCounts();
+
       const subList = subRes.data;
 
-      // 🔥 Fetch stock for each subcategoryId
       const subListWithStock = await Promise.all(
         subList.map(async (item) => {
-          const stock = await fetchStockById(item.id);
-          return { ...item, stock };
+          const totalStock = await fetchStockById(item.id);
+
+          const counts = bookingCounts[item.subCategaryname] || {
+            confirmed: 0,
+            pending: 0,
+          };
+
+          const productLeft =
+            totalStock - (counts.confirmed + counts.pending);
+
+          return {
+            ...item,
+            totalStock,
+            confirmed: counts.confirmed,
+            pending: counts.pending,
+            productLeft: productLeft < 0 ? 0 : productLeft,
+          };
         })
       );
 
@@ -46,7 +97,6 @@ export default function StockInformation() {
       setLoading(false);
     }
   };
-
 
   const categoryList = [...new Set(categories.map((c) => c.productCategory))];
 
@@ -61,14 +111,12 @@ export default function StockInformation() {
     return matchesSearch && matchesCategory;
   });
 
-  // 🔥 Open modal
   const openStockModal = (product) => {
     setSelectedProduct(product);
     setStockValue("");
     setShowModal(true);
   };
 
-  // 🔥 Update stock API
   const updateStock = async () => {
     if (!stockValue || isNaN(stockValue)) {
       alert("Enter valid stock quantity");
@@ -90,7 +138,6 @@ export default function StockInformation() {
     }
   };
 
-  // 🔥 Fetch stock for one subcategory
   const fetchStockById = async (subcategoryId) => {
     try {
       const res = await axios.get(
@@ -139,7 +186,10 @@ export default function StockInformation() {
               <th>Subcategory</th>
               <th>Price</th>
               <th>Image</th>
-              <th>Stock</th>
+              <th>Total Stock</th>
+              <th>Confirmed</th>
+              <th>Pending</th>
+              <th>Left</th>
               <th>Update</th>
             </tr>
           </thead>
@@ -147,7 +197,7 @@ export default function StockInformation() {
           <tbody>
             {filteredSubcategories.length === 0 ? (
               <tr>
-                <td colSpan={7} className="no-data">No records found</td>
+                <td colSpan={10} className="no-data">No records found</td>
               </tr>
             ) : (
               filteredSubcategories.map((item, index) => (
@@ -156,15 +206,19 @@ export default function StockInformation() {
                   <td>{item.productCategory}</td>
                   <td>{item.subCategaryname}</td>
                   <td>₹{item.price}</td>
+
                   <td>
                     <img src={item.image_1} alt="img" className="sub-img" />
                   </td>
-                  <td>{item.stock ?? 0}</td>
 
-                  {/* 🔥 Add Stock Button */}
+                  <td>{item.totalStock}</td>
+                  <td>{item.confirmed}</td>
+                  <td>{item.pending}</td>
+                  <td>{item.productLeft}</td>
+
                   <td>
-                    <button 
-                      className="add-stock-btn" 
+                    <button
+                      className="add-stock-btn"
                       onClick={() => openStockModal(item)}
                     >
                       Add Stock
@@ -177,7 +231,6 @@ export default function StockInformation() {
         </table>
       )}
 
-      {/* 🔥 Modal */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-box">

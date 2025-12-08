@@ -78,9 +78,6 @@ const Login = () => {
             onClick={() => setShowPassword(!showPassword)}
           />
         </div>
-
-
-
         <button type="submit" disabled={loading}>
           {loading ? "Logging in..." : "Login"}
         </button>

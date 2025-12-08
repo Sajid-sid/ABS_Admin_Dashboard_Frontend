@@ -17,30 +17,71 @@ export default function Dashboard() {
     Cancelled: 0,
   });
 
+  const [productCounts, setProductCounts] = useState({});
+
   useEffect(() => {
-    fetchOrderCounts();
+    fetchOrders();
   }, []);
 
-  const fetchOrderCounts = async () => {
+  const fetchOrders = async () => {
     try {
+      console.log("📡 Fetching orders:", `${API_BASE}/api/orders`);
+
       const res = await fetch(`${API_BASE}/api/orders`);
       const json = await res.json();
 
-      if (!json.success) return;
+      if (!json.success) {
+        console.log("❌ API returned success:false");
+        return;
+      }
 
-      const allOrders = json.orders || [];
+      const orders = json.orders || [];
+      console.log("📦 Orders received:", orders.length);
 
+      // -------------------------------
+      // ORDER STATUS COUNT
+      // -------------------------------
       const grouped = {
-        Pending: allOrders.filter(o => o.orderStatus === "Pending").length,
-        Confirmed: allOrders.filter(o => o.orderStatus === "Confirmed").length,
-        Shipped: allOrders.filter(o => o.orderStatus === "Shipped").length,
-        Delivered: allOrders.filter(o => o.orderStatus === "Delivered").length,
-        Cancelled: allOrders.filter(o => o.orderStatus === "Cancelled").length,
+        Pending: orders.filter((o) => o.orderStatus === "Pending").length,
+        Confirmed: orders.filter((o) => o.orderStatus === "Confirmed").length,
+        Shipped: orders.filter((o) => o.orderStatus === "Shipped").length,
+        Delivered: orders.filter((o) => o.orderStatus === "Delivered").length,
+        Cancelled: orders.filter((o) => o.orderStatus === "Cancelled").length,
       };
 
       setCounts(grouped);
+
+      // -------------------------------
+      // PRODUCT-WISE COUNTS
+      // -------------------------------
+      const productMap = {};
+
+      orders.forEach((order) => {
+        console.log("Status:", order.orderStatus);
+        console.log("Items:", order.items);
+
+        if (Array.isArray(order.items) && order.items.length > 0) {
+          order.items.forEach((item, index) => {
+            console.log(`   🔹 ITEM ${index + 1}`);
+            console.log("      Product Name:", item.productName);
+            console.log("      Price:", item.price);
+            console.log("      Quantity:", item.quantity);
+
+            const name = item.productName || "Unknown Product";
+
+            if (!productMap[name]) {
+              productMap[name] = 0;
+            }
+            productMap[name] += item.quantity;
+          });
+        }
+      });
+
+      console.log("📊 FINAL PRODUCT MAP:", productMap);
+
+      setProductCounts(productMap);
     } catch (err) {
-      console.error("Failed to fetch counts", err);
+      console.error("❌ Error fetching orders:", err);
     }
   };
 
@@ -56,45 +97,55 @@ export default function Dashboard() {
 
           <div className="status-section">
 
-            {/* ALL ORDERS */}
             <div className="status-box status-all" onClick={() => goTo("/orders")}>
               All Orders
               <span className="status-count">
-                {counts.Pending + counts.Confirmed + counts.Shipped + counts.Delivered + counts.Cancelled}
+                {counts.Pending +
+                  counts.Confirmed +
+                  counts.Shipped +
+                  counts.Delivered +
+                  counts.Cancelled}
               </span>
             </div>
 
-            {/* PENDING */}
             <div className="status-box status-waiting" onClick={() => goTo("/orders/pending")}>
               Waiting for Acceptance
               <span className="status-count">{counts.Pending}</span>
             </div>
 
-            {/* CONFIRMED */}
             <div className="status-box status-confirmed" onClick={() => goTo("/orders/confirmed")}>
               Booking Confirmed
               <span className="status-count">{counts.Confirmed}</span>
             </div>
 
-            {/* SHIPPED */}
             <div className="status-box status-shipped" onClick={() => goTo("/orders/shipped")}>
               Shipped
               <span className="status-count">{counts.Shipped}</span>
             </div>
 
-            {/* DELIVERED */}
             <div className="status-box status-completed" onClick={() => goTo("/orders/delivered")}>
               Completed
               <span className="status-count">{counts.Delivered}</span>
             </div>
 
-            {/* CANCELLED */}
             <div className="status-box status-cancelled" onClick={() => goTo("/orders/cancelled")}>
               Cancelled
               <span className="status-count">{counts.Cancelled}</span>
             </div>
-
           </div>
+
+          {/* PRODUCT WISE COUNT */}
+          <div className="status-section">
+            <h3 style={{ width: "100%" }}>Product Wise Order Count</h3>
+
+            {Object.entries(productCounts).map(([name, qty]) => (
+              <div className="status-box status-product" key={name}>
+                {name}
+                <span className="status-count">{qty}</span>
+              </div>
+            ))}
+          </div>
+
         </div>
       </div>
     </div>
