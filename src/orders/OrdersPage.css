@@ -11,6 +11,7 @@
 }
 
 .orders-page.theme-b {
+  width: 100%;
   min-height:100vh;
   padding:22px;
   background: linear-gradient(180deg, #070707 0%, #0b0b0b 100%);
@@ -63,7 +64,7 @@
 
 .col-date { color:var(--muted); font-size:13px; }
 
-.col-actions { display:flex; gap:8px; align-items:center; justify-content:flex-end; }
+.col-actions { display:flex; gap:8px; align-items:center;  }
 
 .status-select {
   background:var(--panel);

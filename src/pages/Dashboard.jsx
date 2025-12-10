@@ -25,63 +25,50 @@ export default function Dashboard() {
 
   const fetchOrders = async () => {
     try {
-      console.log("📡 Fetching orders:", `${API_BASE}/api/orders`);
-
       const res = await fetch(`${API_BASE}/api/orders`);
       const json = await res.json();
-
-      if (!json.success) {
-        console.log("❌ API returned success:false");
-        return;
-      }
+      if (!json.success) return;
 
       const orders = json.orders || [];
-      console.log("📦 Orders received:", orders.length);
 
-      // -------------------------------
-      // ORDER STATUS COUNT
-      // -------------------------------
-      const grouped = {
-        Pending: orders.filter((o) => o.orderStatus === "Pending").length,
-        Confirmed: orders.filter((o) => o.orderStatus === "Confirmed").length,
-        Shipped: orders.filter((o) => o.orderStatus === "Shipped").length,
-        Delivered: orders.filter((o) => o.orderStatus === "Delivered").length,
-        Cancelled: orders.filter((o) => o.orderStatus === "Cancelled").length,
+      // ------------------------------------
+      // ITEM STATUS COUNT
+      // ------------------------------------
+      const itemStatusCount = {
+        Pending: 0,
+        Confirmed: 0,
+        Shipped: 0,
+        Delivered: 0,
+        Cancelled: 0,
       };
 
-      setCounts(grouped);
-
-      // -------------------------------
-      // PRODUCT-WISE COUNTS
-      // -------------------------------
       const productMap = {};
 
       orders.forEach((order) => {
-        console.log("Status:", order.orderStatus);
-        console.log("Items:", order.items);
+        if (Array.isArray(order.items)) {
+          order.items.forEach((item) => {
+            const status = item.itemStatus || "Pending";
+            const qty = Number(item.quantity) || 0;
 
-        if (Array.isArray(order.items) && order.items.length > 0) {
-          order.items.forEach((item, index) => {
-            console.log(`   🔹 ITEM ${index + 1}`);
-            console.log("      Product Name:", item.productName);
-            console.log("      Price:", item.price);
-            console.log("      Quantity:", item.quantity);
-
-            const name = item.productName || "Unknown Product";
-
-            if (!productMap[name]) {
-              productMap[name] = 0;
+            // Count by itemStatus
+            if (itemStatusCount[status] !== undefined) {
+              itemStatusCount[status] += qty;
             }
-            productMap[name] += item.quantity;
+
+            // Product-wise count
+            const pid = item.productId;
+            if (!productMap[pid]) {
+              productMap[pid] = { name: item.productName, quantity: 0 };
+            }
+            productMap[pid].quantity += qty;
           });
         }
       });
 
-      console.log("📊 FINAL PRODUCT MAP:", productMap);
-
+      setCounts(itemStatusCount);
       setProductCounts(productMap);
     } catch (err) {
-      console.error("❌ Error fetching orders:", err);
+      console.error("❌ Error:", err);
     }
   };
 
@@ -95,10 +82,10 @@ export default function Dashboard() {
             Welcome {user ? user.name || user.email : "Admin"}
           </h2>
 
+          {/* STATUS BOXES */}
           <div className="status-section">
-
             <div className="status-box status-all" onClick={() => goTo("/orders")}>
-              All Orders
+              All Items
               <span className="status-count">
                 {counts.Pending +
                   counts.Confirmed +
@@ -136,12 +123,12 @@ export default function Dashboard() {
 
           {/* PRODUCT WISE COUNT */}
           <div className="status-section">
-            <h3 style={{ width: "100%" }}>Product Wise Order Count</h3>
+            <h3 style={{ width: "100%" }}>Product Wise Item Count</h3>
 
-            {Object.entries(productCounts).map(([name, qty]) => (
-              <div className="status-box status-product" key={name}>
-                {name}
-                <span className="status-count">{qty}</span>
+            {Object.entries(productCounts).map(([pid, data]) => (
+              <div className="status-box status-product" key={pid}>
+                {data.name}
+                <span className="status-count">{data.quantity}</span>
               </div>
             ))}
           </div>

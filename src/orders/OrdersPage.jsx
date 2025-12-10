@@ -20,13 +20,12 @@ function StatusBadge({ status }) {
 
 export default function OrdersPage() {
   const navigate = useNavigate();
-  const { status } = useParams(); // dynamic status param (pending, delivered, etc.)
+  const { status } = useParams();
   const routeStatus = (status || "all").toLowerCase();
 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // UI controls
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -34,21 +33,39 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
+  const [stockMap, setStockMap] = useState({});
+  const [bookingCountsMap, setBookingCountsMap] = useState({});
+  const [itemStatuses, setItemStatuses] = useState({}); // Track each item's status in modal
+
+  // Fetch all orders
   useEffect(() => {
     fetchOrders();
   }, []);
 
+  // Reset page when filters change
   useEffect(() => {
-    setPage(1); // reset page when route/status changes or search
+    setPage(1);
   }, [routeStatus, search, pageSize]);
 
+  // Fetch stocks and booking counts
+  useEffect(() => {
+    const loadStocks = async () => {
+      const stocks = await fetchStockCounts();
+      const bookings = await fetchBookingCounts();
+      setStockMap(stocks);
+      setBookingCountsMap(bookings);
+    };
+    loadStocks();
+  }, []);
+
+  /** Fetch orders */
   async function fetchOrders() {
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/api/orders`);
       const json = await res.json();
       if (json && json.success) setOrders(Array.isArray(json.orders) ? json.orders : []);
-      else setOrders(Array.isArray(json.orders) ? json.orders : []);
+      else setOrders([]);
     } catch (err) {
       console.error("Fetch orders failed", err);
       alert("Failed to fetch orders from server");
@@ -57,27 +74,68 @@ export default function OrdersPage() {
     }
   }
 
-  // filter by routeStatus and search
-  const filtered = useMemo(() => {
-    let list = Array.isArray(orders) ? [...orders] : [];
-    if (routeStatus !== "all") {
-      // routeStatus may be e.g. 'pending' -> compare case-insensitive with orderStatus
-      list = list.filter(o => (o.orderStatus || "").toLowerCase() === routeStatus);
+  /** Fetch all stock data */
+  const fetchStockCounts = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/stock/getStocks`);
+      const json = await res.json();
+      if (!json.success) return {};
+
+      const map = {};
+      (json.data || []).forEach(item => {
+        if (item.productName) map[item.productName.toLowerCase()] = Number(item.stock) || 0;
+      });
+      return map;
+    } catch (err) {
+      console.error("Fetch stock counts failed", err);
+      return {};
     }
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      list = list.filter(o => (`${o.id} ${o.fullName} ${o.phone}`).toLowerCase().includes(q));
+  };
+
+  /** Fetch total confirmed/pending per product */
+  const fetchBookingCounts = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/orders`);
+      const json = await res.json();
+      if (!json.success) return {};
+
+      const map = {};
+      (json.orders || []).forEach(order => {
+        if (!Array.isArray(order.items)) return;
+        order.items.forEach(item => {
+          const name = item.productName?.toLowerCase();
+          if (!name) return;
+          if (!map[name]) map[name] = { confirmed: 0, pending: 0 };
+          if (order.orderStatus === "Confirmed") map[name].confirmed += item.quantity;
+          else if (order.orderStatus === "Pending") map[name].pending += item.quantity;
+        });
+      });
+      return map;
+    } catch (err) {
+      console.error("Fetch booking counts failed", err);
+      return {};
     }
-    return list;
-  }, [orders, routeStatus, search]);
+  };
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+  /** Check if order can be confirmed */
+  const canConfirmOrder = (order) => {
+    for (const item of order.items || []) {
+      const key = item.productName?.toLowerCase();
+      const totalStock = stockMap[key] || 0;
+      const bookings = bookingCountsMap[key] || { confirmed: 0, pending: 0 };
+      const productLeft = totalStock - (bookings.confirmed + bookings.pending);
+      if (item.quantity > productLeft) return false;
+    }
+    return true;
+  };
 
-  const openDetails = (order) => { setSelectedOrder(order); setShowDetails(true); };
-  const closeDetails = () => { setSelectedOrder(null); setShowDetails(false); };
-
+  /** Update order status */
   const updateStatus = async (orderId, newStatus) => {
+    const order = orders.find(o => o.id === orderId);
+    if (newStatus === "Confirmed" && !canConfirmOrder(order)) {
+      alert("Cannot confirm: insufficient stock for one or more items!");
+      return;
+    }
     if (!window.confirm(`Change status to "${newStatus}"?`)) return;
     setUpdatingStatus(true);
     try {
@@ -88,12 +146,9 @@ export default function OrdersPage() {
       });
       const j = await res.json();
       if (j.success) {
-        // update local orders
         setOrders(prev => prev.map(o => o.id === orderId ? { ...o, orderStatus: newStatus } : o));
         if (selectedOrder && selectedOrder.id === orderId) setSelectedOrder(s => ({ ...s, orderStatus: newStatus }));
-      } else {
-        alert(j.message || "Failed to update status");
-      }
+      } else alert(j.message || "Failed to update status");
     } catch (err) {
       console.error("Update status failed", err);
       alert("Failed to update status");
@@ -101,6 +156,34 @@ export default function OrdersPage() {
       setUpdatingStatus(false);
     }
   };
+
+  // Filter orders by routeStatus and search
+  const filtered = useMemo(() => {
+    let list = Array.isArray(orders) ? [...orders] : [];
+    if (routeStatus !== "all") list = list.filter(o => (o.orderStatus || "").toLowerCase() === routeStatus);
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      list = list.filter(o => (`${o.id} ${o.fullName} ${o.phone}`).toLowerCase().includes(q));
+    }
+    return list;
+  }, [orders, routeStatus, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+
+  const openDetails = (order) => {
+  setSelectedOrder(order);
+
+  const statuses = {};
+  order.items?.forEach(it => {
+    statuses[it.id] = it.itemStatus || "Pending";   // fallback safe
+  });
+
+  setItemStatuses(statuses);
+  setShowDetails(true);
+};
+
+  const closeDetails = () => { setSelectedOrder(null); setShowDetails(false); };
 
   return (
     <div className="orders-page theme-b">
@@ -122,9 +205,7 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {loading ? (
-        <div className="loading">Loading orders…</div>
-      ) : (
+      {loading ? <div className="loading">Loading orders…</div> : (
         <>
           <div className="orders-table">
             <div className="orders-row head">
@@ -137,37 +218,39 @@ export default function OrdersPage() {
               <div>Actions</div>
             </div>
 
-            {paginated.length === 0 ? (
-              <div className="empty">No orders found.</div>
-            ) : paginated.map(o => (
-              <div className="orders-row" key={o.id}>
-                <div className="col-id">#{o.id}</div>
-                <div className="col-cust">
-                  <div className="cust-name">{o.fullName}</div>
-                  <div className="cust-phone">{o.phone}</div>
-                  <div className="cust-address">{o.address}</div>
+            {paginated.length === 0 ? <div className="empty">No orders found.</div> :
+              paginated.map(o => (
+                <div className="orders-row" key={o.id}>
+                  <div className="col-id">#{o.id}</div>
+                  <div className="col-cust">
+                    <div className="cust-name">{o.fullName}</div>
+                    <div className="cust-phone">{o.phone}</div>
+                    <div className="cust-address">{o.address}</div>
+                  </div>
+                  <div className="col-items">{o.items?.length ?? 0}</div>
+                  <div className="col-total">₹{Number(o.totalAmount).toFixed(2)}</div>
+                  <div className="col-status">
+                    {
+                      (() => {
+                        const statuses = o.items?.map(i => i.itemStatus) || [];
+                        const unique = [...new Set(statuses)];
+
+                        if (unique.length === 1) {
+                          return <StatusBadge status={unique[0]} />;
+                        } else {
+                          return <StatusBadge status="Mixed" />;
+                        }
+                      })()
+                    }
+                  </div>
+
+                  <div className="col-date">{new Date(o.createdAt).toLocaleString()}</div>
+                  <div className="col-actions">
+                    <button className="btn dark" onClick={() => openDetails(o)}>View</button>
+                  </div>
                 </div>
-                <div className="col-items">{(o.items?.length ?? 0)}</div>
-                <div className="col-total">₹{Number(o.totalAmount).toFixed(2)}</div>
-                <div className="col-status"><StatusBadge status={o.orderStatus} /></div>
-                <div className="col-date">{new Date(o.createdAt).toLocaleString()}</div>
-                <div className="col-actions">
-                  <button className="btn dark" onClick={() => openDetails(o)}>View</button>
-                  <select
-                    value={o.orderStatus}
-                    onChange={(e) => updateStatus(o.id, e.target.value)}
-                    disabled={updatingStatus}
-                    className="status-select"
-                  >
-                    <option>Pending</option>
-                    <option>Confirmed</option>
-                    <option>Shipped</option>
-                    <option>Delivered</option>
-                    <option>Cancelled</option>
-                  </select>
-                </div>
-              </div>
-            ))}
+              ))
+            }
           </div>
 
           <div className="orders-footer">
@@ -185,7 +268,7 @@ export default function OrdersPage() {
 
       {showDetails && selectedOrder && (
         <div className="modal-backdrop" onClick={closeDetails}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Order #{selectedOrder.id}</h3>
               <button className="close-btn" onClick={closeDetails}>✕</button>
@@ -214,37 +297,60 @@ export default function OrdersPage() {
               <hr />
 
               <div className="items-list">
-                {selectedOrder.items?.map(it => (
-                  <div key={it.id} className="order-item">
-                    <img src={it.imageUrl} alt={it.productName} />
-                    <div className="item-info">
-                      <div className="item-name">{it.productName}</div>
-                      <div className="item-meta">Qty: {it.quantity} • ₹{it.price}</div>
-                    </div>
-                    <div className="item-total">₹{(it.price * it.quantity).toFixed(2)}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+                {selectedOrder.items?.map(it => {
+                  const key = it.productName?.toLowerCase();
+                  const totalStock = stockMap[key] || 0;
+                  const bookings = bookingCountsMap[key] || { confirmed: 0, pending: 0 };
+                  const productLeft = Math.max(0, totalStock - (bookings.confirmed + bookings.pending));
+                  const itemStatus = itemStatuses[it.id];
 
-            <div className="modal-footer">
-              <label>Change Status:</label>
-              <select
-                value={selectedOrder.orderStatus}
-                onChange={async (e) => {
-                  const newStatus = e.target.value;
-                  await updateStatus(selectedOrder.id, newStatus);
-                  setSelectedOrder(s => ({ ...s, orderStatus: newStatus }));
-                  setOrders(prev => prev.map(o => o.id === selectedOrder.id ? { ...o, orderStatus: newStatus } : o));
-                }}
-              >
-                <option>Pending</option>
-                <option>Confirmed</option>
-                <option>Shipped</option>
-                <option>Delivered</option>
-                <option>Cancelled</option>
-              </select>
-              <button className="btn close" onClick={closeDetails}>Close</button>
+                  return (
+                    <div key={it.id} className="order-item">
+                      <img src={it.imageUrl} alt={it.productName} />
+                      <div className="item-info">
+                        <div className="item-name">{it.productName}</div>
+                        <div className="item-meta">
+                          Qty: {it.quantity} • ₹{it.price} • Available: {productLeft}
+                        </div>
+                      </div>
+                      <div className="item-status">
+                        <select
+                          value={itemStatus}
+                          onChange={(e) => setItemStatuses(prev => ({ ...prev, [it.id]: e.target.value }))}
+                        >
+                          <option>Pending</option>
+                          <option>Confirmed</option>
+                          <option>Shipped</option>
+                          <option>Delivered</option>
+                          <option>Cancelled</option>
+                        </select>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="modal-footer">
+                <button className="btn gold" onClick={async () => {
+                  for (const it of selectedOrder.items) {
+                    const newStatus = itemStatuses[it.id];
+                    if (!newStatus) continue;
+                    if (newStatus === "Confirmed" && it.quantity > (stockMap[it.productName.toLowerCase()] || 0)) {
+                      alert(`Cannot confirm: insufficient stock for ${it.productName}`);
+                      continue;
+                    }
+                    await fetch(`${API_BASE}/api/orders/${selectedOrder.id}/items/${it.id}/status`, {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ status: newStatus }),
+                    });
+                  }
+                  alert("All item statuses updated!");
+                  fetchOrders();
+                  closeDetails();
+                }}>Submit</button>
+                <button className="btn close" onClick={closeDetails}>Close</button>
+              </div>
             </div>
           </div>
         </div>

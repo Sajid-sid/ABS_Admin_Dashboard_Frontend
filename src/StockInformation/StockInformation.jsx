@@ -24,24 +24,25 @@ export default function StockInformation() {
       const res = await axios.get(`${API_URL}/orders`);
       const orders = res.data.orders || [];
 
-      const countMap = {}; // productName → { confirmed, pending }
+      const countMap = {}; // productId → { confirmed, pending }
 
       orders.forEach((order) => {
-        const status = order.orderStatus; // "Confirmed" or "Pending"
         if (!Array.isArray(order.items)) return;
 
         order.items.forEach((item) => {
-          const name = item.productName;
-          if (!name) return;
+          const pid = item.productId;
+          const status = item.itemStatus;
 
-          if (!countMap[name]) {
-            countMap[name] = { confirmed: 0, pending: 0 };
+          if (!pid) return;
+
+          if (!countMap[pid]) {
+            countMap[pid] = { confirmed: 0, pending: 0 };
           }
 
           if (status === "Confirmed") {
-            countMap[name].confirmed += item.quantity;
+            countMap[pid].confirmed += item.quantity;
           } else if (status === "Pending") {
-            countMap[name].pending += item.quantity;
+            countMap[pid].pending += item.quantity;
           }
         });
       });
@@ -52,6 +53,7 @@ export default function StockInformation() {
       return {};
     }
   };
+
 
   useEffect(() => {
     loadData();
@@ -71,10 +73,11 @@ export default function StockInformation() {
         subList.map(async (item) => {
           const totalStock = await fetchStockById(item.id);
 
-          const counts = bookingCounts[item.subCategaryname] || {
+          const counts = bookingCounts[item.id] || {
             confirmed: 0,
             pending: 0,
           };
+
 
           const productLeft =
             totalStock - (counts.confirmed + counts.pending);
