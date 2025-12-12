@@ -8,6 +8,7 @@ import AddProductCategory from "./Products/AddProductCategory";
 import AddSubCategory from "./Products/AddSubCategory";
 import DashboardLayout from "./layouts/DashboardLayout";
 import AdminOrders from "./orders/OrdersPage";
+import Banner  from './Banner/BannerManager';
 // ⭐ Stock Pages
 import StockInformation from "./StockInformation/StockInformation";
 
@@ -107,7 +108,17 @@ const App = () => {
         }
       />
 
-
+      {/* ---- Orders ---- */}
+      <Route
+        path="/banner"
+        element={
+          <PrivateRoute>
+            <DashboardLayout>
+              <Banner />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
       
      
 
