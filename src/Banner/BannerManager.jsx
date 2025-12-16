@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "./bannerManager.css";
+import "./BannerManager.css";
 
 export default function BannerManager() {
   const API = import.meta.env.VITE_API_URL;
