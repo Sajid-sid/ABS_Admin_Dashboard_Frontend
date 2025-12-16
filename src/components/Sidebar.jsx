@@ -1,13 +1,13 @@
-import React, { useState } from "react"; 
+import React, { useState } from "react";
 import "../pages/Dashboard.css";
 import { Link } from "react-router-dom";
-import { 
-  FaBars, 
-  FaBoxOpen, 
-  FaChevronDown, 
-  FaChevronUp, 
-  FaShoppingCart, 
-  FaWarehouse 
+import {
+  FaBars,
+  FaBoxOpen,
+  FaChevronDown,
+  FaChevronUp,
+  FaShoppingCart,
+  FaWarehouse
 } from "react-icons/fa";
 
 export default function Sidebar() {
@@ -76,7 +76,7 @@ export default function Sidebar() {
           {!collapsed && stockMenuOpen && (
             <div className="submenu">
               <Link to="/stock-information" className="submenu-item">📦 Stock Information</Link>
-              
+
             </div>
           )}
         </div>
@@ -107,6 +107,9 @@ export default function Sidebar() {
             </div>
           )}
         </div>
+        <Link to="/banner" className="nav-item">
+          🖼️ {!collapsed && "Banner"}
+        </Link>
 
         <Link to="/logout" className="nav-item">
           🚪 {!collapsed && "Logout"}
