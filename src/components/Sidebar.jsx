@@ -51,9 +51,9 @@ export default function Sidebar() {
 
           {!collapsed && productMenuOpen && (
             <div className="submenu">
-              <Link to="/add-product" className="submenu-item">➕ Add Product</Link>
-              <Link to="/category" className="submenu-item">🗂️ Add Product Category</Link>
-              <Link to="/sub-category" className="submenu-item">🏷️ Sub-Category</Link>
+              <Link to="/add-product" className="submenu-item">🛍️ Collections</Link>
+              <Link to="/category" className="submenu-item">🗂️ Add Category</Link>
+              <Link to="/sub-category" className="submenu-item">🏷️ Add Product</Link>
             </div>
           )}
         </div>

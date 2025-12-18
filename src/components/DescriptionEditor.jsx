@@ -1,103 +1,164 @@
-// DescriptionEditor.jsx
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
-import "./DescriptionEditor.css"; // optional styling
+import ButtonView from "@ckeditor/ckeditor5-ui/src/button/buttonview";
+import imageIcon from "@ckeditor/ckeditor5-core/theme/icons/image.svg";
+import "./DescriptionEditor.css";
 
-// Custom upload adapter class
-class MyUploadAdapter {
-  constructor(loader, uploadUrl) {
-    this.loader = loader; // CKEditor FileLoader instance
+/* ===============================
+   Upload Adapter (Image + Video)
+================================ */
+class UploadAdapter {
+  constructor(loader, editor, uploadUrl) {
+    this.loader = loader;
+    this.editor = editor;
     this.uploadUrl = uploadUrl;
   }
 
-  // Starts the upload process.
   upload() {
-    return this.loader.file
-      .then(file => new Promise((resolve, reject) => {
-        const data = new FormData();
-        // "upload" will be the field name the backend expects
-        data.append("upload", file);
+    return this.loader.file.then((file) => {
+      return new Promise(async (resolve, reject) => {
+        try {
+          const data = new FormData();
+          data.append("upload", file);
 
-        fetch(this.uploadUrl, {
-          method: "POST",
-          body: data
-        })
-        .then(async res => {
-          if (!res.ok) {
-            const text = await res.text();
-            return reject(text || "Upload failed");
-          }
-          return res.json();
-        })
-        .then(json => {
-          // backend must return { url: "https://..." }
-          resolve({
-            default: json.url
+          const res = await fetch(this.uploadUrl, {
+            method: "POST",
+            body: data,
           });
-        })
-        .catch(err => {
+
+          const json = await res.json();
+          const { url, type } = json;
+
+          if (!url) throw new Error("Upload failed");
+
+          // ✅ IMAGE
+          if (type === "image") {
+            resolve({ default: url });
+            return;
+          }
+
+          // ✅ VIDEO
+          const videoHTML = `
+            <video controls style="max-width:100%">
+              <source src="${url}" type="${file.type}" />
+            </video>
+          `;
+
+          this.editor.model.change(() => {
+            this.editor.setData(this.editor.getData() + videoHTML);
+          });
+
+          resolve({ default: url });
+        } catch (err) {
           reject(err.message || "Upload error");
-        });
-      }));
+        }
+      });
+    });
   }
 
-  // Optional: abort the upload.
-  abort() {
-    // Not implemented: you can abort fetch if you implement AbortController.
-  }
+  abort() {}
 }
 
-// Plugin to integrate upload adapter with CKEditor instance
-function MyCustomUploadAdapterPlugin(editor, uploadUrl) {
-  editor.plugins.get("FileRepository").createUploadAdapter = loader => {
-    return new MyUploadAdapter(loader, uploadUrl);
+/* ===============================
+   Upload Adapter Plugin
+================================ */
+function UploadAdapterPlugin(editor, uploadUrl) {
+  editor.plugins.get("FileRepository").createUploadAdapter = (loader) => {
+    return new UploadAdapter(loader, editor, uploadUrl);
   };
 }
 
-export default function DescriptionEditor({ uploadEndpoint = "/api/upload" }) {
+/* ===============================
+   🎬 Upload Media Button Plugin
+================================ */
+function MediaUploadPlugin(editor) {
+  editor.ui.componentFactory.add("uploadMedia", (locale) => {
+    const view = new ButtonView(locale);
+
+    view.set({
+      label: "Upload Media",
+      icon: imageIcon,
+      tooltip: true,
+    });
+
+    view.on("execute", () => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*,video/*"; // ✅ KEY LINE
+      input.click();
+
+      input.onchange = () => {
+        const file = input.files[0];
+        if (!file) return;
+
+        const loader = editor.plugins
+          .get("FileRepository")
+          .createLoader(file);
+
+        editor.plugins
+          .get("FileRepository")
+          .createUploadAdapter(loader)
+          .upload();
+      };
+    });
+
+    return view;
+  });
+}
+
+/* ===============================
+   MAIN COMPONENT
+================================ */
+export default function DescriptionEditor({
+  uploadEndpoint = "/api/subcategories/upload-image",
+}) {
   const [data, setData] = useState("");
-  const editorRef = useRef();
 
   return (
     <div className="description-wrapper">
-      <label className="description-label">Description</label>
+      <label>Description</label>
+
       <CKEditor
         editor={ClassicEditor}
         config={{
-          extraPlugins: [editor => MyCustomUploadAdapterPlugin(editor, uploadEndpoint)],
-          toolbar: [
-            "undo", "redo",
-            "|", "bold", "italic", "underline",
-            "|", "link", "bulletedList", "numberedList",
-            "|", "insertTable", "mediaEmbed", "uploadImage",
-            "|", "removeFormat"
+          extraPlugins: [
+            (editor) => UploadAdapterPlugin(editor, uploadEndpoint),
+            MediaUploadPlugin,
           ],
-          image: {
-            toolbar: [ "imageTextAlternative", "imageStyle:full", "imageStyle:side" ]
-          },
-          table: {
-            contentToolbar: [ "tableColumn", "tableRow", "mergeTableCells" ]
-          },
-          mediaEmbed: {
-            previewsInData: true
-          }
-        }}
-        onReady={editor => {
-          editorRef.current = editor;
+          toolbar: [
+            "heading",
+            "|",
+            "bold",
+            "italic",
+            "underline",
+            "|",
+            "bulletedList",
+            "numberedList",
+            "|",
+            "link",
+            "imageUpload",
+            "uploadMedia", // 🎬 OUR BUTTON
+            "|",
+            "undo",
+            "redo",
+          ],
         }}
         data={data}
-        onChange={(event, editor) => {
-          const html = editor.getData();
-          setData(html);
-        }}
+        onChange={(event, editor) => setData(editor.getData())}
       />
-      {/* Example: show html content */}
-      <div style={{ marginTop: 12 }}>
-        <strong>HTML output preview (for debugging):</strong>
-        <div style={{ border: "1px solid #ddd", padding: 8, minHeight: 60 }}>
-          <div dangerouslySetInnerHTML={{ __html: data }} />
-        </div>
+
+      {/* Preview */}
+      <div style={{ marginTop: 15 }}>
+        <strong>HTML Preview</strong>
+        <div
+          style={{
+            border: "1px solid #ddd",
+            padding: 10,
+            marginTop: 5,
+          }}
+          dangerouslySetInnerHTML={{ __html: data }}
+        />
       </div>
     </div>
   );

@@ -41,6 +41,8 @@ const AddSubCategory = () => {
     }
   };
 
+
+
   const fetchSubCategories = async () => {
     try {
       const res = await axios.get(`${BASE_URL}/api/subcategories`);
@@ -59,46 +61,68 @@ const AddSubCategory = () => {
     }
   };
 
-  // CKEditor custom upload adapter
+
+  // CKEditor custom upload adapter (Image + Video)
   function MyCustomUploadAdapterPlugin(editor) {
     editor.plugins.get("FileRepository").createUploadAdapter = (loader) => {
-      return new MyUploadAdapter(loader);
+      return new MyUploadAdapter(loader, editor);
     };
   }
 
   class MyUploadAdapter {
-    constructor(loader) {
+    constructor(loader, editor) {
       this.loader = loader;
-      this.url = `${BASE_URL}/api/upload-image`; 
+      this.editor = editor;
+      this.url = `${BASE_URL}/api/subcategories/upload-image`;
     }
 
     upload() {
-      return this.loader.file.then(
-        (file) =>
-          new Promise((resolve, reject) => {
-            const data = new FormData();
-            data.append("image", file);
+      return this.loader.file.then((file) => {
+        return new Promise((resolve, reject) => {
+          const data = new FormData();
+          data.append("upload", file);
 
-            axios
-              .post(this.url, data, {
-                headers: { "Content-Type": "multipart/form-data" },
-              })
-              .then((res) => {
-                const url = res.data.url;
-                if (!url) {
-                  reject("Upload failed: no url returned");
-                  return;
-                }
+          axios
+            .post(this.url, data, {
+              headers: { "Content-Type": "multipart/form-data" },
+            })
+            .then((res) => {
+              const { url, type } = res.data;
+
+              if (!url) {
+                reject("Upload failed");
+                return;
+              }
+
+              // ✅ IMAGE → default CKEditor behavior
+              if (type === "image") {
                 resolve({ default: url });
-              })
-              .catch((err) => {
-                reject(err?.response?.data?.message || "Upload failed");
+                return;
+              }
+
+              // ✅ VIDEO → manually insert HTML
+              const videoHTML = `
+              <video controls style="max-width:100%">
+                <source src="${url}" type="${file.type}" />
+              </video>
+            `;
+
+              this.editor.model.change(() => {
+                this.editor.setData(this.editor.getData() + videoHTML);
               });
-          })
-      );
+
+              resolve({ default: url });
+            })
+            .catch((err) => {
+              reject(err?.response?.data?.message || "Upload failed");
+            });
+        });
+      });
     }
-    abort() {}
+
+    abort() { }
   }
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -278,15 +302,20 @@ const AddSubCategory = () => {
               "heading", "|",
               "bold", "italic", "underline", "|",
               "bulletedList", "numberedList", "|",
-              "link", "imageUpload", "mediaEmbed", "|",
+              "link", "imageUpload", "|",
+
               "undo", "redo"
             ],
+            mediaEmbed: {
+              previewsInData: true,
+            },
           }}
           data={formData.description}
           onChange={(event, editor) => {
             setFormData((p) => ({ ...p, description: editor.getData() }));
           }}
         />
+
 
         {/* IMAGES */}
         <div className="subcategory-row">
