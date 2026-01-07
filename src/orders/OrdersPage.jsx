@@ -32,6 +32,8 @@ export default function OrdersPage() {
   const [showDetails, setShowDetails] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
 
   const [stockMap, setStockMap] = useState({});
   const [bookingCountsMap, setBookingCountsMap] = useState({});
@@ -172,16 +174,16 @@ export default function OrdersPage() {
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const openDetails = (order) => {
-  setSelectedOrder(order);
+    setSelectedOrder(order);
 
-  const statuses = {};
-  order.items?.forEach(it => {
-    statuses[it.id] = it.itemStatus || "Pending";   // fallback safe
-  });
+    const statuses = {};
+    order.items?.forEach(it => {
+      statuses[it.id] = it.itemStatus || "Pending";   
+    });
 
-  setItemStatuses(statuses);
-  setShowDetails(true);
-};
+    setItemStatuses(statuses);
+    setShowDetails(true);
+  };
 
   const closeDetails = () => { setSelectedOrder(null); setShowDetails(false); };
 
@@ -213,11 +215,12 @@ export default function OrdersPage() {
               <div>Customer</div>
               <div>Items</div>
               <div>Total</div>
-              <div>Status</div>
+              <div>Payment Status</div>
+              <div>Payment Method</div>
+              <div>Order Status</div>
               <div>Date</div>
               <div>Actions</div>
             </div>
-
             {paginated.length === 0 ? <div className="empty">No orders found.</div> :
               paginated.map(o => (
                 <div className="orders-row" key={o.id}>
@@ -229,7 +232,27 @@ export default function OrdersPage() {
                   </div>
                   <div className="col-items">{o.items?.length ?? 0}</div>
                   <div className="col-total">₹{Number(o.totalAmount).toFixed(2)}</div>
-                  <div className="col-status">
+                  <div className="col-payment-status">
+
+                    <span
+                      className={`payment-badge ${o.paymentStatus === "Paid"
+                        ? "payment-paid"
+                        : o.paymentStatus === "Pending"
+                          ? "payment-pending"
+                          : o.paymentStatus === "Failed"
+                            ? "payment-failed"
+                            : "payment-refunded"
+                        }`}
+                    >
+                      {o.paymentStatus}
+                    </span>
+                  </div>
+
+                  <div className="col-payment-method">
+                    <span className="payment-method">{o.paymentMethod}</span>
+                  </div>
+
+                    <div className="col-status">
                     {
                       (() => {
                         const statuses = o.items?.map(i => i.itemStatus) || [];
@@ -243,6 +266,7 @@ export default function OrdersPage() {
                       })()
                     }
                   </div>
+
 
                   <div className="col-date">{new Date(o.createdAt).toLocaleString()}</div>
                   <div className="col-actions">
@@ -293,6 +317,11 @@ export default function OrdersPage() {
                   <div>{new Date(selectedOrder.createdAt).toLocaleString()}</div>
                 </div>
               </div>
+              <div>
+                <div>Payment Status: {selectedOrder.paymentStatus}</div>
+                <div>Payment Method: {selectedOrder.paymentMethod}</div>
+              </div>
+
 
               <hr />
 
