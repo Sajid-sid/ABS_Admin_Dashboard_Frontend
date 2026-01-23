@@ -12,11 +12,11 @@ const AddProduct = () => {
   const [editId, setEditId] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
-  // ✅ Load from .env
+  //  Load from .env
   const BASE_URL = import.meta.env.VITE_API_URL;
   const API_URL = `${BASE_URL}/api/products`;
 
-  // ✅ Fetch all products
+  //  Fetch all products
   const fetchProducts = async () => {
     try {
       const res = await axios.get(API_URL);
@@ -30,7 +30,7 @@ const AddProduct = () => {
     fetchProducts();
   }, []);
 
-  // ✅ Handle Input Change
+  //  Handle Input Change
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "productImage") {
@@ -42,19 +42,19 @@ const AddProduct = () => {
     }
   };
 
-  // ✅ Add or Update Product
+  //  Add or Update Product
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const trimmedName = formData.productName.trim().toLowerCase();
 
-    // 🧠 Check duplicate name (excluding current editing product)
+    //  Check duplicate name (excluding current editing product)
     const nameExists = products.some(
       (p) => p.productName.trim().toLowerCase() === trimmedName && p.id !== editId
     );
 
     if (nameExists) {
-      alert("⚠️ Product name already exists. Please choose a different name.");
+      alert(" Product name already exists. Please choose a different name.");
       return;
     }
 
@@ -69,16 +69,16 @@ const AddProduct = () => {
         await axios.put(`${API_URL}/${editId}`, data, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        alert("✅ Product updated successfully!");
+        alert(" Product updated successfully!");
       } else {
         if (!formData.productImage) {
-          alert("⚠️ Please upload a product image before adding.");
+          alert(" Please upload a product image before adding.");
           return;
         }
         await axios.post(API_URL, data, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        alert("✅ Product added successfully!");
+        alert(" Product added successfully!");
       }
 
       setFormData({ productName: "", productImage: null });
@@ -91,21 +91,21 @@ const AddProduct = () => {
     }
   };
 
-  // ✅ Edit Product
+  //  Edit Product
   const handleEdit = (product) => {
     setFormData({ productName: product.productName, productImage: null });
-    setPreview(product.productImage);
+    setPreview(`${BASE_URL}${product.productImage}`);
     setEditId(product.id);
     setShowForm(true);
   };
 
-  // ✅ Delete Product
+  //  Delete Product
   const handleDelete = async (id) => {
     console.log("Deleting ID:", id); // <-
     if (!window.confirm("Are you sure you want to delete this product?")) return;
     try {
       await axios.delete(`${API_URL}/${id}`);
-      alert("🗑️ Product deleted successfully!");
+      alert(" Product deleted successfully!");
       fetchProducts();
     } catch (err) {
       console.error("❌ Delete error:", err);
@@ -127,7 +127,8 @@ const AddProduct = () => {
           products.map((prod) => (
             <div key={prod.id} className="product-card">
               <img
-                src={prod.productImage}
+                src={`${BASE_URL}${prod.productImage}`}
+                onError={(e) => (e.target.src = "/no-image.png")}
                 alt={prod.productName}
                 className="product-avatar"
               />

@@ -63,40 +63,40 @@ const AddSubCategory = () => {
 
 
   // CKEditor custom upload adapter (Image + Video)
-function MyCustomUploadAdapterPlugin(editor) {
-  editor.plugins.get("FileRepository").createUploadAdapter = (loader) => {
-    return new MyUploadAdapter(loader);
-  };
-}
-
-class MyUploadAdapter {
-  constructor(loader) {
-    this.loader = loader;
-    this.url = `${BASE_URL}/api/subcategories/upload-image`;
-  }
-
-  async upload() {
-    const file = await this.loader.file;
-
-    const data = new FormData();
-    data.append("upload", file);
-
-    const res = await axios.post(this.url, data, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-
-    if (!res.data?.default) {
-      throw new Error("Image upload failed");
-    }
-
-    // ✅ THIS inserts <img src="..."> correctly
-    return {
-      default: res.data.default,
+  function MyCustomUploadAdapterPlugin(editor) {
+    editor.plugins.get("FileRepository").createUploadAdapter = (loader) => {
+      return new MyUploadAdapter(loader);
     };
   }
 
-  abort() {}
-}
+  class MyUploadAdapter {
+    constructor(loader) {
+      this.loader = loader;
+      this.url = `${BASE_URL}/api/subcategories/upload-image`;
+    }
+
+    async upload() {
+      const file = await this.loader.file;
+
+      const data = new FormData();
+      data.append("upload", file);
+
+      const res = await axios.post(this.url, data, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      if (!res.data?.default) {
+        throw new Error("Image upload failed");
+      }
+
+      // ✅ THIS inserts <img src="..."> correctly
+      return {
+        default: res.data.default,
+      };
+    }
+
+    abort() { }
+  }
 
 
 
@@ -271,25 +271,25 @@ class MyUploadAdapter {
         {/* Description */}
         <label>Description</label>
         <CKEditor
-  editor={ClassicEditor}
-  config={{
-    extraPlugins: [MyCustomUploadAdapterPlugin],
-    toolbar: [
-      "heading", "|",
-      "bold", "italic", "underline", "|",
-      "bulletedList", "numberedList", "|",
-      "link", "imageUpload", "mediaEmbed", "|",
-      "undo", "redo"
-    ],
-    mediaEmbed: {
-      previewsInData: true,
-    },
-  }}
-  data={formData.description}
-  onChange={(event, editor) => {
-    setFormData((p) => ({ ...p, description: editor.getData() }));
-  }}
-/>
+          editor={ClassicEditor}
+          config={{
+            extraPlugins: [MyCustomUploadAdapterPlugin],
+            toolbar: [
+              "heading", "|",
+              "bold", "italic", "underline", "|",
+              "bulletedList", "numberedList", "|",
+              "link", "imageUpload", "mediaEmbed", "|",
+              "undo", "redo"
+            ],
+            mediaEmbed: {
+              previewsInData: true,
+            },
+          }}
+          data={formData.description}
+          onChange={(event, editor) => {
+            setFormData((p) => ({ ...p, description: editor.getData() }));
+          }}
+        />
 
 
 

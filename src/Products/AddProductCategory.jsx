@@ -19,7 +19,7 @@ const AddProductCategory = () => {
   const PRODUCT_API = `${BASE_URL}/api/products`;
   const CATEGORY_API = `${BASE_URL}/api/productCategories`;
 
-  // ✅ Fetch product names for dropdown
+  // Fetch product names for dropdown
   const fetchProducts = async () => {
     try {
       const res = await axios.get(PRODUCT_API);
@@ -29,7 +29,7 @@ const AddProductCategory = () => {
     }
   };
 
-  // ✅ Fetch all categories
+  //  Fetch all categories
   const fetchCategories = async () => {
     try {
       const res = await axios.get(CATEGORY_API);
@@ -44,7 +44,7 @@ const AddProductCategory = () => {
     fetchCategories();
   }, []);
 
-  // ✅ Handle Input Change
+  //  Handle Input Change
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "productCategoryImage") {
@@ -56,7 +56,7 @@ const AddProductCategory = () => {
     }
   };
 
-  // ✅ Add or Update Category
+  // Add or Update Category
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -77,12 +77,12 @@ const AddProductCategory = () => {
         await axios.put(`${CATEGORY_API}/${editId}`, data, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        alert("✅ Category updated successfully!");
+        alert(" Category updated successfully!");
       } else {
         await axios.post(CATEGORY_API, data, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        alert("✅ Category added successfully!");
+        alert(" Category added successfully!");
       }
 
       setFormData({
@@ -100,19 +100,19 @@ const AddProductCategory = () => {
     }
   };
 
-  // ✅ Edit Category
+  //  Edit Category
   const handleEdit = (cat) => {
     setFormData({
       productName: cat.productName,
       productCategory: cat.productCategory,
       productCategoryImage: null,
     });
-    setPreview(cat.productCategoryImage);
+    setPreview(`${BASE_URL}${cat.productCategoryImage}`);
     setEditId(cat.id);
     setShowForm(true);
   };
 
-  // ✅ Delete Category
+  //  Delete Category
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this category?")) return;
     try {
@@ -132,7 +132,7 @@ const AddProductCategory = () => {
         + Category
       </button>
 
-      {/* ✅ Categories Gallery */}
+      {/*  Categories Gallery */}
       <div className="product-gallery">
         {categories.length === 0 ? (
           <p className="no-products">No categories available</p>
@@ -140,9 +140,10 @@ const AddProductCategory = () => {
           categories.map((cat) => (
             <div key={cat.id} className="product-card">
               <img
-                src={cat.productCategoryImage}
+                src={`${BASE_URL}${cat.productCategoryImage}`}
                 alt={cat.productCategory}
                 className="product-avatar"
+                onError={(e) => (e.target.src = "/no-image.png")}
               />
               <p>
                 <strong>{cat.productName}</strong> — {cat.productCategory}
@@ -156,7 +157,7 @@ const AddProductCategory = () => {
         )}
       </div>
 
-      {/* ✅ Modal Form */}
+      {/*  Modal Form */}
       {showForm && (
         <div className="modal-overlay" onClick={() => setShowForm(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
