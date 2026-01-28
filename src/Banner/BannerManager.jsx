@@ -17,6 +17,7 @@ export default function BannerManager() {
   const loadBanners = async () => {
     try {
       const res = await axios.get(`${API}/api/banner/all`);
+      
       setBanners(res.data || []);
     } catch (err) {
       console.log("Error fetching banners", err);
@@ -33,6 +34,17 @@ export default function BannerManager() {
     setImage(file);
     setPreview(URL.createObjectURL(file));
   };
+
+  const getBannerImageUrl = (path) => {
+    if (!path) return "";
+
+    // already absolute (safe guard)
+    if (path.startsWith("http")) return path;
+
+    return `${import.meta.env.VITE_API_URL}${path}`;
+  };
+
+
 
   // Submit Add / Update
   const handleSubmit = async (e) => {
@@ -77,7 +89,7 @@ export default function BannerManager() {
     setTitle(b.title);
     setProject(b.project);
     setPlatform(b.platform);
-    setPreview(b.bannerImage);
+    setPreview(getBannerImageUrl(b.bannerImage));
   };
 
   // Delete
@@ -137,7 +149,12 @@ export default function BannerManager() {
         {banners.map((b) => (
           <div className="banner-card" key={b.id}>
 
-            <img src={b.bannerImage} className="list-img" alt="banner" />
+            <img
+              src={getBannerImageUrl(b.bannerImage)}
+              className="list-img"
+              alt="banner"
+            />
+
 
             <h4>{b.title}</h4>
             <p><b>Project:</b> {b.project}</p>

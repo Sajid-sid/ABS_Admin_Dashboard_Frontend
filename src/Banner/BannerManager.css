@@ -1,38 +1,67 @@
+/* ===============================
+   Banner Manager Layout
+================================ */
+
 .banner-manager {
   max-width: 900px;
   margin: auto;
   padding: 20px;
+  font-family: Arial, sans-serif;
 }
+
+/* ===============================
+   Form Styles
+================================ */
 
 .banner-form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .banner-form input[type="text"],
+.banner-form select,
 .banner-form input[type="file"] {
   padding: 10px;
-  font-size: 16px;
+  font-size: 15px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+}
+
+.banner-form input[type="file"] {
+  cursor: pointer;
 }
 
 .banner-form button {
   padding: 12px;
-  background: #4a5cf0;
-  color: #fff;
+  background-color: #4a5cf0;
+  color: #ffffff;
   font-size: 16px;
   border: none;
   border-radius: 6px;
+  cursor: pointer;
 }
+
+.banner-form button:hover {
+  background-color: #3949db;
+}
+
+/* ===============================
+   Image Preview
+================================ */
 
 .preview-img {
   width: 250px;
   height: auto;
   margin-top: 10px;
   border-radius: 8px;
+  border: 1px solid #e5e7eb;
 }
 
-/* Banner List */
+/* ===============================
+   Banner List Grid
+================================ */
+
 .banner-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -40,50 +69,98 @@
   margin-top: 20px;
 }
 
+/* ===============================
+   Banner Card
+================================ */
+
 .banner-card {
-  max-width: 220px;  
+  max-width: 220px;
   margin: auto;
   padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  text-align: center;
 }
 
+.banner-card h4 {
+  margin: 10px 0 6px;
+  font-size: 15px;
+}
+
+.banner-card p {
+  margin: 2px 0;
+  font-size: 13px;
+  color: #555;
+}
+
+/* ===============================
+   Banner Image
+================================ */
 
 .list-img {
-  width: 180px;        /* small fixed width */
-  height: 100px;       /* fixed height instead of 150 */
+  width: 180px;
+  height: 100px;
   object-fit: contain;
   border-radius: 6px;
-  margin: 0 auto;      /* center */
   display: block;
+  margin: 0 auto;
+  background-color: #f9fafb;
 }
 
+/* ===============================
+   Action Buttons
+================================ */
 
 .actions {
-  margin-top: 10px;
+  margin-top: 12px;
   display: flex;
   justify-content: space-between;
+  gap: 10px;
 }
 
-.edit-btn,
-.delete-btn {
-  padding: 8px 12px;
+/* Reset default button styles */
+.actions button {
+  appearance: none;
+  -webkit-appearance: none;
   border: none;
-  cursor: pointer;
+  padding: 8px 12px;
   border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  flex: 1;
+  color: #ffffff;
 }
 
-.edit-btn {
-  background: #ffa500;
-  color: #fff;
+/* Edit Button */
+.actions .edit-btn {
+  background-color: #2563eb; /* Blue */
 }
 
-.delete-btn {
-  background: #ff3b3b;
-  color: #fff;
+.actions .edit-btn:hover {
+  background-color: #1d4ed8;
 }
 
-/* Mobile Responsive */
+/* Delete Button */
+.actions .delete-btn {
+  background-color: #ef4444; /* Red */
+}
+
+.actions .delete-btn:hover {
+  background-color: #dc2626;
+}
+
+/* ===============================
+   Responsive
+================================ */
+
 @media (max-width: 600px) {
   .preview-img {
     width: 100%;
+  }
+
+  .banner-card {
+    max-width: 100%;
   }
 }
