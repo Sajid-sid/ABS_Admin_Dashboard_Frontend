@@ -9,12 +9,26 @@ import {
   FaShoppingCart,
   FaWarehouse
 } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../redux/authSlice";
+import { useNavigate } from "react-router-dom";
+
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [productMenuOpen, setProductMenuOpen] = useState(false);
   const [orderMenuOpen, setOrderMenuOpen] = useState(false);
-  const [stockMenuOpen, setStockMenuOpen] = useState(false); // ⭐ NEW STATE
+  const [stockMenuOpen, setStockMenuOpen] = useState(false); 
+
+
+    const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/login");
+  };
 
   return (
     <div className={`sidebar ${collapsed ? "collapsed" : ""}`}>
@@ -111,9 +125,10 @@ export default function Sidebar() {
           🖼️ {!collapsed && "Banner"}
         </Link>
 
-        <Link to="/logout" className="nav-item">
+        <button onClick={handleLogout} className="nav-item">
           🚪 {!collapsed && "Logout"}
-        </Link>
+        </button>
+        
       </nav>
     </div>
   );
