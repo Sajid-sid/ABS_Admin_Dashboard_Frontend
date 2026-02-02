@@ -4,6 +4,10 @@ import axios from "axios";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 import "./AddSubCategory.css";
+import { DndContext, closestCenter, } from "@dnd-kit/core";
+import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy, } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+
 
 const AddSubCategory = () => {
   const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
@@ -17,10 +21,7 @@ const AddSubCategory = () => {
     brand: "",
     description: "",
     gender: "",
-    image_1: null,
-    image_2: null,
-    image_3: null,
-    image_4: null,
+    media: "",
   };
 
   const [formData, setFormData] = useState(initialState);
@@ -28,12 +29,8 @@ const AddSubCategory = () => {
   const [subCategories, setSubCategories] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [carouselIndex, setCarouselIndex] = useState({});
-  const [imagePreview, setImagePreview] = useState({
-    image_1: "",
-    image_2: "",
-    image_3: "",
-    image_4: "",
-  });
+  const [mediaFiles, setMediaFiles] = useState([]);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [showProducts, setShowProducts] = useState(false);
 
@@ -58,13 +55,22 @@ const AddSubCategory = () => {
     const { name, value, files } = e.target;
 
     if (files) {
-      const file = files[0];
-      setFormData((prev) => ({ ...prev, [name]: file }));
+      const selectedFiles = Array.from(files);
 
-      setImagePreview((prev) => ({
-        ...prev,
-        [name]: URL.createObjectURL(file),
+      if (mediaFiles.length + selectedFiles.length > 10) {
+        alert("Maximum 10 media files allowed");
+        return;
+      }
+
+      const newMedia = selectedFiles.map((file) => ({
+        id: URL.createObjectURL(file),
+        file,
+        preview: URL.createObjectURL(file),
+        type: file.type.startsWith("video") ? "video" : "image",
       }));
+
+      setMediaFiles((prev) => [...prev, ...newMedia]);
+
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -74,6 +80,15 @@ const AddSubCategory = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const form = new FormData();
+
+    mediaFiles.forEach((item, index) => {
+      if (item.file) {
+        form.append("media", item.file); // new files
+      } else if (item.existing) {
+        form.append("existingMedia[]", item.url); // old files
+      }
+    });
+
 
     Object.entries(formData).forEach(([key, value]) => {
       if (value !== null && value !== "") {
@@ -95,6 +110,7 @@ const AddSubCategory = () => {
   };
 
   const handleEdit = (sub) => {
+    console.log(sub);
     setEditingId(sub.id);
 
     setFormData({
@@ -106,18 +122,20 @@ const AddSubCategory = () => {
       brand: sub.brand || "",
       description: sub.description || "",
       gender: sub.gender || "",
-      image_1: null,
-      image_2: null,
-      image_3: null,
-      image_4: null,
+      media: sub.media || [],
     });
 
-    setImagePreview({
-      image_1: sub.image_1 ? getImageUrl(sub.image_1) : "",
-      image_2: sub.image_2 ? getImageUrl(sub.image_2) : "",
-      image_3: sub.image_3 ? getImageUrl(sub.image_3) : "",
-      image_4: sub.image_4 ? getImageUrl(sub.image_4) : "",
-    });
+    setMediaFiles(
+      (sub.media || []).map((url) => ({
+        id: url,
+        preview: `${BASE_URL}${url}`,
+        type: url.match(/\.(mp4|webm|ogg)$/) ? "video" : "image",
+        existing: true,
+        url,
+      }))
+    );
+
+
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -136,14 +154,48 @@ const AddSubCategory = () => {
   };
 
   const filteredSubCategories = subCategories.filter((sub) => {
-  const term = searchTerm.toLowerCase();
+    const term = searchTerm.toLowerCase();
 
-  return (
-    sub.subCategaryname?.toLowerCase().includes(term) ||
-    sub.sku?.toLowerCase().includes(term) ||
-    sub.productCategory?.toLowerCase().includes(term)
-  );
-});
+    return (
+      sub.subCategaryname?.toLowerCase().includes(term) ||
+      sub.sku?.toLowerCase().includes(term) ||
+      sub.productCategory?.toLowerCase().includes(term)
+    );
+  });
+
+
+  const SortableItem = ({ item }) => {
+    const { attributes, listeners, setNodeRef, transform, transition } =
+      useSortable({ id: item.id });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      cursor: "grab",
+    };
+
+    return (
+      <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="media-preview-card">
+        {item.type === "image" ? (
+          <img src={item.preview} alt="" />
+        ) : (
+          <video src={item.preview} controls />
+        )}
+      </div>
+    );
+  };
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+
+    if (active.id !== over.id) {
+      setMediaFiles((items) => {
+        const oldIndex = items.findIndex((i) => i.id === active.id);
+        const newIndex = items.findIndex((i) => i.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
 
 
   return (
@@ -256,38 +308,50 @@ const AddSubCategory = () => {
 
         <div className="subcategory-row">
           <div className="subcategory-field">
-            <label>Image 1</label>
-            <input type="file" name="image_1" onChange={handleChange} />
+            <label>Add Media (Max 10 Images/Videos)</label>
+            <input
+              type="file"
+              multiple
+              accept="image/*,video/*"
+              onChange={handleChange}
+            />
           </div>
-          <div className="subcategory-field">
-            <label>Image 2</label>
-            <input type="file" name="image_2" onChange={handleChange} />
-          </div>
+
         </div>
 
-        <div className="subcategory-row">
-          <div className="subcategory-field">
-            <label>Image 3</label>
-            <input type="file" name="image_3" onChange={handleChange} />
+        {mediaFiles.length > 0 && (
+  <div className="media-preview-grid">
+    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext
+        items={mediaFiles.map((i) => i.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        {mediaFiles.map((item) => (
+          <div key={item.id} className="media-preview-card-wrapper">
+            <SortableItem item={item} />
+            <button
+              type="button"
+              className="delete-media-btn"
+              onClick={() => {
+                if (mediaFiles.length === 1) {
+                  alert("At least one media file is required.");
+                  return;
+                }
+                setMediaFiles((prev) =>
+                  prev.filter((m) => m.id !== item.id)
+                );
+              }}
+            >
+              ✕
+            </button>
           </div>
-          <div className="subcategory-field">
-            <label>Image 4</label>
-            <input type="file" name="image_4" onChange={handleChange} />
-          </div>
-        </div>
-        {editingId && (
-          <div className="image-preview-grid">
-            {Object.entries(imagePreview).map(
-              ([key, src]) =>
-                src && (
-                  <div key={key} className="image-preview-card">
-                    <img src={src} alt={key} />
-                    <p>{key.replace("_", " ").toUpperCase()}</p>
-                  </div>
-                )
-            )}
-          </div>
-        )}
+        ))}
+      </SortableContext>
+    </DndContext>
+  </div>
+)}
+
+
 
 
         <button className="subcategory-btn" type="submit">
@@ -295,97 +359,95 @@ const AddSubCategory = () => {
         </button>
       </form>
 
-    
 
 
-<div style={{ textAlign: "right", marginTop: "20px" }}>
-  <button
-    className="subcategory-btn"
-    type="button"
-    onClick={() => setShowProducts((prev) => !prev)}
-  >
-    {showProducts ? "Hide Products" : "View Products"}
-  </button>
-</div>
 
-
-   {showProducts && (
-  <>
-    <h3 className="list-title">Existing Subcategories</h3>
-      <div className="search-box">
-        <input
-          type="text"
-          placeholder="Search by name, SKU or category..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      <div style={{ textAlign: "right", marginTop: "20px" }}>
+        <button
+          className="subcategory-btn"
+          type="button"
+          onClick={() => setShowProducts((prev) => !prev)}
+        >
+          {showProducts ? "Hide Products" : "View Products"}
+        </button>
       </div>
 
-    <div className="subcategory-card-grid">
-      {filteredSubCategories.map((sub) => {
 
-          const images = [sub.image_1, sub.image_2, sub.image_3, sub.image_4].filter(Boolean);
-          const index = carouselIndex[sub.id] || 0;
+      {showProducts && (
+        <>
+          <h3 className="list-title">Existing Subcategories</h3>
+          <div className="search-box">
+            <input
+              type="text"
+              placeholder="Search by name, SKU or category..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
 
+          <div className="subcategory-card-grid">
+            {filteredSubCategories.map((sub) => {
+              const images = sub.media || [];   // <-- here you get the media array
+              const index = carouselIndex[sub.id] || 0;
 
+              return (
+                <div className="subcategory-card" key={sub.id}>
+                  {images.length > 0 && (
+                    <div className="carousel">
+                      <img
+                        src={getImageUrl(images[index])}  // <-- here you render the image
+                        alt={sub.subCategaryname}
+                        className="carousel-image"
+                      />
 
-          return (
-            <div className="subcategory-card" key={sub.id}>
-              {images.length > 0 && (
-                <div className="carousel">
-                  <img
-                    src={getImageUrl(images[index])}
-                    alt={sub.subCategaryname}
-                    className="carousel-image"
-                  />
+                      {images.length > 1 && (
+                        <>
+                          <button
+                            type="button"
+                            className="carousel-btn left"
+                            onClick={() =>
+                              setCarouselIndex((p) => ({
+                                ...p,
+                                [sub.id]: index === 0 ? images.length - 1 : index - 1,
+                              }))
+                            }
+                          >
+                            ‹
+                          </button>
 
-                  {images.length > 1 && (
-                    <>
-                      <button
-                        type="button"
-                        className="carousel-btn left"
-                        onClick={() =>
-                          setCarouselIndex((p) => ({
-                            ...p,
-                            [sub.id]: index === 0 ? images.length - 1 : index - 1,
-                          }))
-                        }
-                      >
-                        ‹
-                      </button>
-
-                      <button
-                        type="button"
-                        className="carousel-btn right"
-                        onClick={() =>
-                          setCarouselIndex((p) => ({
-                            ...p,
-                            [sub.id]: (index + 1) % images.length,
-                          }))
-                        }
-                      >
-                        ›
-                      </button>
-                    </>
+                          <button
+                            type="button"
+                            className="carousel-btn right"
+                            onClick={() =>
+                              setCarouselIndex((p) => ({
+                                ...p,
+                                [sub.id]: (index + 1) % images.length,
+                              }))
+                            }
+                          >
+                            ›
+                          </button>
+                        </>
+                      )}
+                    </div>
                   )}
+
+                  <h4>{sub.subCategaryname}</h4>
+                  <p><b>Category:</b> {sub.productCategory}</p>
+                  <p><b>Price:</b> ₹{sub.price}</p>
+                  <p><b>SKU:</b> {sub.sku}</p>
+
+                  <div className="card-actions">
+                    <button className="edit-btn" onClick={() => handleEdit(sub)}>Edit</button>
+                    <button className="delete-btn" onClick={() => handleDelete(sub.id)}>Delete</button>
+                  </div>
                 </div>
-              )}
+              );
+            })}
 
-              <h4>{sub.subCategaryname}</h4>
-              <p><b>Category:</b> {sub.productCategory}</p>
-              <p><b>Price:</b> ₹{sub.price}</p>
-              <p><b>SKU:</b> {sub.sku}</p>
-
-              <div className="card-actions">
-                <button className="edit-btn" onClick={() => handleEdit(sub)}>Edit</button>
-                <button className="delete-btn" onClick={() => handleDelete(sub.id)}>Delete</button>
-              </div>
-            </div>
-          );
-        })}
-         </div>
-  </>
-)}
+          </div>
+        </>
+      )}
     </div>
   );
 };

@@ -243,3 +243,50 @@
     grid-template-columns: repeat(auto-fill, minmax(220px, 220px));
   }
 }
+
+
+.media-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.media-preview-card {
+  border: 1px solid #ddd;
+  padding: 5px;
+  background: #fff;
+  border-radius: 6px;
+}
+
+.media-preview-card img,
+.media-preview-card video {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+}
+
+
+.media-preview-card-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.delete-media-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(255, 0, 0, 0.8);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.delete-media-btn:hover {
+  background: rgba(255, 0, 0, 1);
+}
