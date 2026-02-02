@@ -104,6 +104,22 @@ const AddSubCategory = () => {
       alert("Subcategory added successfully");
     }
 
+    if (editingId) {
+  await axios.put(`${BASE_URL}/api/subcategories/${editingId}`, form);
+  alert("Updated");
+} else {
+  await axios.post(`${BASE_URL}/api/subcategories`, form);
+  alert("Added");
+}
+
+/*  FULL FORM RESET */
+setEditingId(null);
+setFormData(initialState);
+setMediaFiles([]);
+setCarouselIndex({});
+fetchSubCategories();
+
+
     setEditingId(null);
     setFormData(initialState);
     fetchSubCategories();
@@ -128,7 +144,7 @@ const AddSubCategory = () => {
     setMediaFiles(
       (sub.media || []).map((url) => ({
         id: url,
-        preview: `${BASE_URL}${url}`,
+        preview: getImageUrl(url),
         type: url.match(/\.(mp4|webm|ogg)$/) ? "video" : "image",
         existing: true,
         url,
@@ -149,9 +165,17 @@ const AddSubCategory = () => {
 
   const getImageUrl = (path) => {
     if (!path) return "";
+
     if (path.startsWith("http")) return path;
+
+    // ensure leading slash
+    if (!path.startsWith("/")) {
+      path = "/" + path;
+    }
+
     return `${BASE_URL}${path}`;
   };
+
 
   const filteredSubCategories = subCategories.filter((sub) => {
     const term = searchTerm.toLowerCase();
@@ -187,6 +211,7 @@ const AddSubCategory = () => {
 
   const handleDragEnd = (event) => {
     const { active, over } = event;
+    if (!over) return;
 
     if (active.id !== over.id) {
       setMediaFiles((items) => {
@@ -196,6 +221,7 @@ const AddSubCategory = () => {
       });
     }
   };
+
 
 
   return (
@@ -320,36 +346,36 @@ const AddSubCategory = () => {
         </div>
 
         {mediaFiles.length > 0 && (
-  <div className="media-preview-grid">
-    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext
-        items={mediaFiles.map((i) => i.id)}
-        strategy={verticalListSortingStrategy}
-      >
-        {mediaFiles.map((item) => (
-          <div key={item.id} className="media-preview-card-wrapper">
-            <SortableItem item={item} />
-            <button
-              type="button"
-              className="delete-media-btn"
-              onClick={() => {
-                if (mediaFiles.length === 1) {
-                  alert("At least one media file is required.");
-                  return;
-                }
-                setMediaFiles((prev) =>
-                  prev.filter((m) => m.id !== item.id)
-                );
-              }}
-            >
-              ✕
-            </button>
+          <div className="media-preview-grid">
+            <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext
+                items={mediaFiles.map((i) => i.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                {mediaFiles.map((item) => (
+                  <div key={item.id} className="media-preview-card-wrapper">
+                    <SortableItem item={item} />
+                    <button
+                      type="button"
+                      className="delete-media-btn"
+                      onClick={() => {
+                        if (mediaFiles.length === 1) {
+                          alert("At least one media file is required.");
+                          return;
+                        }
+                        setMediaFiles((prev) =>
+                          prev.filter((m) => m.id !== item.id)
+                        );
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </SortableContext>
+            </DndContext>
           </div>
-        ))}
-      </SortableContext>
-    </DndContext>
-  </div>
-)}
+        )}
 
 
 
@@ -376,29 +402,41 @@ const AddSubCategory = () => {
       {showProducts && (
         <>
           <h3 className="list-title">Existing Subcategories</h3>
-          <div className="search-box">
-            <input
-              type="text"
-              placeholder="Search by name, SKU or category..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
 
           <div className="subcategory-card-grid">
             {filteredSubCategories.map((sub) => {
-              const images = sub.media || [];   // <-- here you get the media array
+              const images = sub.media || [];
               const index = carouselIndex[sub.id] || 0;
+              const current = images[index];
 
               return (
                 <div className="subcategory-card" key={sub.id}>
                   {images.length > 0 && (
                     <div className="carousel">
-                      <img
-                        src={getImageUrl(images[index])}  // <-- here you render the image
-                        alt={sub.subCategaryname}
-                        className="carousel-image"
-                      />
+                      {(() => {
+                        const url = getImageUrl(current);
+                        const isVideo = /\.(mp4|webm|ogg|mov|m4v)$/i.test(url);
+
+                        return isVideo ? (
+                          <video
+                            key={url}
+                            src={url}
+                            className="carousel-image"
+                            controls
+                            autoPlay
+                            muted
+                            loop
+                          />
+                        ) : (
+                          <img
+                            key={url}
+                            src={url}
+                            alt={sub.subCategaryname}
+                            className="carousel-image"
+                          />
+                        );
+                      })()}
+
 
                       {images.length > 1 && (
                         <>
@@ -408,7 +446,8 @@ const AddSubCategory = () => {
                             onClick={() =>
                               setCarouselIndex((p) => ({
                                 ...p,
-                                [sub.id]: index === 0 ? images.length - 1 : index - 1,
+                                [sub.id]:
+                                  index === 0 ? images.length - 1 : index - 1,
                               }))
                             }
                           >
@@ -444,6 +483,8 @@ const AddSubCategory = () => {
                 </div>
               );
             })}
+
+
 
           </div>
         </>

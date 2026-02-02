@@ -290,3 +290,24 @@
 .delete-media-btn:hover {
   background: rgba(255, 0, 0, 1);
 }
+
+
+.carousel-image {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+}
+
+.carousel video {
+  background: #000;
+}
+
+
+.media-preview-card img,
+.media-preview-card video,
+.carousel-image {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  background: #000;
+}
