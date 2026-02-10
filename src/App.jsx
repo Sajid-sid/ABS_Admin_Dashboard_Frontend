@@ -9,7 +9,7 @@ import AddSubCategory from "./Products/AddSubCategory";
 import DashboardLayout from "./layouts/DashboardLayout";
 import AdminOrders from "./orders/OrdersPage";
 import Banner  from './Banner/BannerManager';
-// ⭐ Stock Pages
+import AddAdVideos from "./adVideo/AddAdVideos";
 import StockInformation from "./StockInformation/StockInformation";
 
 // Protect routes
@@ -108,6 +108,7 @@ const App = () => {
         }
       />
 
+
       {/* ---- Orders ---- */}
       <Route
         path="/banner"
@@ -120,6 +121,17 @@ const App = () => {
         }
       />
       
+      <Route
+        path="/ad-videos"
+        element={
+          <PrivateRoute>
+            <DashboardLayout>
+              <AddAdVideos />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
      
 
       {/* ---- Default Fallback ---- */}

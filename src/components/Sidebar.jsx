@@ -9,6 +9,7 @@ import {
   FaShoppingCart,
   FaWarehouse
 } from "react-icons/fa";
+import { FaVideo } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../redux/authSlice";
 import { useNavigate } from "react-router-dom";
@@ -124,6 +125,11 @@ export default function Sidebar() {
         <Link to="/banner" className="nav-item">
           🖼️ {!collapsed && "Banner"}
         </Link>
+
+        <Link to="/ad-videos" className="nav-item">
+  <FaVideo /> {!collapsed && "Ad Videos"}
+</Link>
+
 
         <button onClick={handleLogout} className="nav-item">
           🚪 {!collapsed && "Logout"}

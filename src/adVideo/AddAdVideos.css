@@ -1,0 +1,39 @@
+.ad-video-container {
+  padding: 20px;
+}
+
+.ad-video-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 250px);
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.ad-video-card {
+  position: relative;
+}
+
+.ad-video-card video {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.delete-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: red;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+
+.drag-handle {
+  cursor: grab;
+  background: #eee;
+  padding: 4px;
+  font-size: 12px;
+  text-align: center;
+}
