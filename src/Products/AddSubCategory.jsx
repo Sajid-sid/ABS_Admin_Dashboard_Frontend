@@ -478,7 +478,8 @@ fetchSubCategories();
 
                   <div className="card-actions">
                     <button className="edit-btn" onClick={() => handleEdit(sub)}>Edit</button>
-                    <button className="delete-btn" onClick={() => handleDelete(sub.id)}>Delete</button>
+                    <button className="delete-sub-btn" onClick={() => handleDelete(sub.id)}>Delete</button>
+
                   </div>
                 </div>
               );
