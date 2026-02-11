@@ -164,3 +164,21 @@
     max-width: 100%;
   }
 }
+
+
+/*  HARD RESET FOR ACTION BUTTONS (fix global collision) */
+.banner-card .actions {
+  position: relative;
+  display: flex;
+  gap: 10px;
+}
+
+.banner-card .actions button {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  left: auto !important;
+  bottom: auto !important;
+
+  flex: 1;
+}
