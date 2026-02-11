@@ -37,23 +37,18 @@ const AddAdVideos = () => {
     }
   };
 
-  // Upload videos (local)
   const handleUpload = (e) => {
-    const files = Array.from(e.target.files);
+  const files = Array.from(e.target.files);
 
-    if (videos.length + files.length > 5) {
-      alert("Maximum 5 videos allowed ⚠️");
-      return;
-    }
+  const newVideos = files.map((file) => ({
+    id: URL.createObjectURL(file),
+    file,
+    preview: URL.createObjectURL(file),
+  }));
 
-    const newVideos = files.map((file) => ({
-      id: URL.createObjectURL(file),
-      file,
-      preview: URL.createObjectURL(file),
-    }));
+  setVideos((prev) => [...prev, ...newVideos]);
+};
 
-    setVideos((prev) => [...prev, ...newVideos]);
-  };
 
   // Save to server
   const handleSubmit = async () => {
@@ -155,7 +150,7 @@ const AddAdVideos = () => {
 
   return (
     <div className="ad-video-container">
-      <h2>Ad Video Manager (Max 5)</h2>
+      <h2>Ad Video Manager</h2>
 
       <input type="file" multiple accept="video/*" onChange={handleUpload} />
 
