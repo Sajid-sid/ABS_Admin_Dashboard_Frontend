@@ -112,17 +112,42 @@ const AddProductCategory = () => {
     setShowForm(true);
   };
 
-  //  Delete Category
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this category?")) return;
+
+  const handleDelete = async (cat) => {
     try {
-      await axios.delete(`${CATEGORY_API}/${id}`);
+      //  Fetch subcategories
+      const subRes = await axios.get(`${BASE_URL}/api/subcategories`);
+      const subcategories = subRes.data || [];
+
+      //  Check if category is used
+      const linkedSubs = subcategories.filter(
+        (sub) => sub.productCategory === cat.productCategory
+      );
+
+      //  If products exist → STOP delete
+      if (linkedSubs.length > 0) {
+        alert(
+          `❌ This category has ${linkedSubs.length} products under it.\n\nDelete the products first, then you can delete this category.`
+        );
+        return;
+      }
+
+      //  Normal delete
+      const confirmDelete = window.confirm(
+        "Are you sure you want to delete this category?"
+      );
+      if (!confirmDelete) return;
+
+      await axios.delete(`${CATEGORY_API}/${cat.id}`);
       alert("🗑️ Category deleted successfully!");
       fetchCategories();
+
     } catch (err) {
       console.error("❌ Delete error:", err);
     }
   };
+
+
 
   return (
     <div className="product-page-container">
@@ -150,7 +175,7 @@ const AddProductCategory = () => {
               </p>
               <div className="actions">
                 <button onClick={() => handleEdit(cat)}>✏️</button>
-                <button onClick={() => handleDelete(cat.id)}>🗑️</button>
+                <button onClick={() => handleDelete(cat)}>🗑️</button>
               </div>
             </div>
           ))
