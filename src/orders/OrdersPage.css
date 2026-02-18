@@ -54,7 +54,7 @@
 .col-id { color:var(--gold); font-weight:700; }
 .col-cust .cust-name { font-weight:700; color:var(--white); }
 .col-cust .cust-phone { color:var(--muted); font-size:13px; margin-top:3px; }
-.col-cust .cust-address { color:rgba(255,255,255,0.06); font-size:12px; margin-top:4px; }
+.col-cust .cust-address { color:var(--muted); font-size:12px; margin-top:4px; }
 
 .col-total { color:var(--gold); font-weight:700; }
 .col-items { color:var(--muted); font-weight:600; text-align:center; }

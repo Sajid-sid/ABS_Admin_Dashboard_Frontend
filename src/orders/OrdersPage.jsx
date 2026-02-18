@@ -172,16 +172,17 @@ export default function OrdersPage() {
   const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   const openDetails = (order) => {
-  setSelectedOrder(order);
+     console.log("📦 Selected Order:", order);
+    setSelectedOrder(order);
 
-  const statuses = {};
-  order.items?.forEach(it => {
-    statuses[it.id] = it.itemStatus || "Pending";   // fallback safe
-  });
+    const statuses = {};
+    order.items?.forEach(it => {
+      statuses[it.id] = it.itemStatus || "Pending";   // fallback safe
+    });
 
-  setItemStatuses(statuses);
-  setShowDetails(true);
-};
+    setItemStatuses(statuses);
+    setShowDetails(true);
+  };
 
   const closeDetails = () => { setSelectedOrder(null); setShowDetails(false); };
 
@@ -284,10 +285,29 @@ export default function OrdersPage() {
                 </div>
                 <div>
                   <strong>Order Info</strong>
+
                   <div>Total: ₹{Number(selectedOrder.totalAmount).toFixed(2)}</div>
-                  <div>Items: {selectedOrder.items?.length ?? 0}</div>
-                  <div>Status: <StatusBadge status={selectedOrder.orderStatus} /></div>
+
+                  <div>
+                    Payment Method: <b>{selectedOrder.paymentMethod}</b>
+                  </div>
+
+                  <div>
+                    Payment Status:
+                    <StatusBadge status={selectedOrder.paymentStatus} />
+                  </div>
+
+                  <div>
+                    Order Status:
+                    <StatusBadge status={selectedOrder.orderStatus} />
+                  </div>
+
+
+                  <div>
+                    Items: {selectedOrder.items?.length ?? 0}
+                  </div>
                 </div>
+
                 <div>
                   <strong>Placed</strong>
                   <div>{new Date(selectedOrder.createdAt).toLocaleString()}</div>
