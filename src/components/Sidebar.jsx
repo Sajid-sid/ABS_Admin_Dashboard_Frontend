@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "../pages/Dashboard.css";
 import { Link } from "react-router-dom";
+import { FaStar } from "react-icons/fa";
 import {
   FaBars,
   FaBoxOpen,
@@ -19,10 +20,10 @@ export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [productMenuOpen, setProductMenuOpen] = useState(false);
   const [orderMenuOpen, setOrderMenuOpen] = useState(false);
-  const [stockMenuOpen, setStockMenuOpen] = useState(false); 
+  const [stockMenuOpen, setStockMenuOpen] = useState(false);
 
 
-    const dispatch = useDispatch();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
 
@@ -127,14 +128,17 @@ export default function Sidebar() {
         </Link>
 
         <Link to="/ad-videos" className="nav-item">
-  <FaVideo /> {!collapsed && "Ad Videos"}
-</Link>
+          <FaVideo /> {!collapsed && "Ad Videos"}
+        </Link>
 
+        <Link to="/product-overview" className="nav-item">
+           ⭐ Product Overview
+        </Link>
 
         <button onClick={handleLogout} className="nav-item">
           🚪 {!collapsed && "Logout"}
         </button>
-        
+
       </nav>
     </div>
   );

@@ -8,9 +8,10 @@ import AddProductCategory from "./Products/AddProductCategory";
 import AddSubCategory from "./Products/AddSubCategory";
 import DashboardLayout from "./layouts/DashboardLayout";
 import AdminOrders from "./orders/OrdersPage";
-import Banner  from './Banner/BannerManager';
+import Banner from './Banner/BannerManager';
 import AddAdVideos from "./adVideo/AddAdVideos";
 import StockInformation from "./StockInformation/StockInformation";
+import ProductOverview from "./CustomerReviews/ProductDescription";
 
 // Protect routes
 const PrivateRoute = ({ children }) => {
@@ -120,7 +121,7 @@ const App = () => {
           </PrivateRoute>
         }
       />
-      
+
       <Route
         path="/ad-videos"
         element={
@@ -132,7 +133,17 @@ const App = () => {
         }
       />
 
-     
+      <Route
+        path="/product-overview"
+        element={
+          <PrivateRoute>
+            <DashboardLayout>
+              <ProductOverview />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
 
       {/* ---- Default Fallback ---- */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

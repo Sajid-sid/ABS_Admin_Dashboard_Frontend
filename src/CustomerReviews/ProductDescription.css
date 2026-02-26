@@ -1,0 +1,112 @@
+.pd-container {
+    background: #f5f5f5;
+    padding: 20px;
+}
+
+/* Button group */
+.pd-button-group {
+    display: flex;
+    gap: 300px;
+    /* reduced from 100px */
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+/* Button style */
+.pd-btn {
+    padding: 8px 18px;
+    border-radius: 4px;
+    border: 1px solid #999;
+    background: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: fit-content;
+    /* fits to content */
+    white-space: nowrap;
+    /* prevents breaking text */
+}
+
+/* Active button */
+.pd-btn.active {
+    background: #a40000;
+    color: #fff;
+    border-color: #a40000;
+}
+
+/* Hover */
+.pd-btn:hover {
+    background: #a40000;
+    color: #fff;
+    border-color: #a40000;
+}
+
+/* Content area */
+.pd-content {
+    background: #fff;
+    padding: 20px;
+    border-top: 1px solid #ddd;
+    line-height: 1.7;
+    font-size: 14px;
+    color: #333;
+    border-radius: 4px;
+}
+
+/* CKEditor styling */
+.pd-content label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.pd-content .ck-editor__editable {
+    min-height: 150px;
+    border-radius: 4px;
+}
+
+.review-box {
+  background: #fff;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  border: 1px solid #eee;
+}
+
+.review-email {
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.review-rating {
+  font-size: 13px;
+  margin-bottom: 5px;
+  color: #666;
+}
+
+.po-review-stars {
+  color: #ff9800;
+  margin-bottom: 8px;
+}
+
+.review-comment {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .pd-button-group {
+        gap: 10px;
+    }
+
+    .pd-btn {
+        font-size: 13px;
+        padding: 6px 12px;
+    }
+
+    .pd-content {
+        padding: 15px;
+    }
+}
