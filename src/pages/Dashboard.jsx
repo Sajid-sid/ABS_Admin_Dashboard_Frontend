@@ -24,7 +24,8 @@ export default function Dashboard() {
   useEffect(() => {
     fetchOrders();
     fetchSubCategoryCount();
-    fetchCategoryCount("Men"); // Change category if needed
+     fetchCategoryCount();
+    
   }, []);
 
   // ----------------------------
@@ -93,20 +94,20 @@ export default function Dashboard() {
   // ----------------------------
   // FETCH CATEGORY COUNT
   // ----------------------------
-  const fetchCategoryCount = async (category) => {
-    try {
-      const res = await fetch(
-        `${API_BASE}/api/subcategories/count/${category}`
-      );
-      const data = await res.json();
+  const fetchCategoryCount = async (category) =>  {
+  try {
+    const res = await fetch(
+      `${API_BASE}/api/subcategories/count/product-categories`
+    );
+    const data = await res.json();
 
-      if (data.success) {
-        setCategoryCount(data.total);
-      }
-    } catch (error) {
-      console.error("Error fetching category count:", error);
+    if (data.success) {
+      setCategoryCount(data.total); // 👈 important
     }
-  };
+  } catch (error) {
+    console.error("Error fetching category count:", error);
+  }
+};
 
   const goTo = (url) => navigate(url);
 
@@ -164,6 +165,10 @@ export default function Dashboard() {
             <div className="status-box status-product">
               Total Products
               <span className="status-count">{subCategoryCount}</span>
+            </div>
+            <div className="status-box status-product">
+              Total Category
+              <span className="status-count">{categoryCount}</span>
             </div>
           </div>
 
