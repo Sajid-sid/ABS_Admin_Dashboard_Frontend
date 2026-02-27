@@ -18,11 +18,18 @@ export default function Dashboard() {
   });
 
   const [productCounts, setProductCounts] = useState({});
+  const [subCategoryCount, setSubCategoryCount] = useState(0);
+  const [categoryCount, setCategoryCount] = useState(0);
 
   useEffect(() => {
     fetchOrders();
+    fetchSubCategoryCount();
+    fetchCategoryCount("Men"); // Change category if needed
   }, []);
 
+  // ----------------------------
+  // FETCH ORDER DATA
+  // ----------------------------
   const fetchOrders = async () => {
     try {
       const res = await fetch(`${API_BASE}/api/orders`);
@@ -31,9 +38,6 @@ export default function Dashboard() {
 
       const orders = json.orders || [];
 
-      // ------------------------------------
-      // ITEM STATUS COUNT
-      // ------------------------------------
       const itemStatusCount = {
         Pending: 0,
         Confirmed: 0,
@@ -50,12 +54,10 @@ export default function Dashboard() {
             const status = item.itemStatus || "Pending";
             const qty = Number(item.quantity) || 0;
 
-            // Count by itemStatus
             if (itemStatusCount[status] !== undefined) {
               itemStatusCount[status] += qty;
             }
 
-            // Product-wise count
             const pid = item.productId;
             if (!productMap[pid]) {
               productMap[pid] = { name: item.productName, quantity: 0 };
@@ -68,7 +70,41 @@ export default function Dashboard() {
       setCounts(itemStatusCount);
       setProductCounts(productMap);
     } catch (err) {
-      console.error("❌ Error:", err);
+      console.error("Error fetching orders:", err);
+    }
+  };
+
+  // ----------------------------
+  // FETCH TOTAL SUBCATEGORY COUNT
+  // ----------------------------
+  const fetchSubCategoryCount = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/subcategories/count`);
+      const data = await res.json();
+
+      if (data.success) {
+        setSubCategoryCount(data.total);
+      }
+    } catch (error) {
+      console.error("Error fetching subcategory count:", error);
+    }
+  };
+
+  // ----------------------------
+  // FETCH CATEGORY COUNT
+  // ----------------------------
+  const fetchCategoryCount = async (category) => {
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/subcategories/count/${category}`
+      );
+      const data = await res.json();
+
+      if (data.success) {
+        setCategoryCount(data.total);
+      }
+    } catch (error) {
+      console.error("Error fetching category count:", error);
     }
   };
 
@@ -82,10 +118,10 @@ export default function Dashboard() {
             Welcome {user ? user.name || user.email : "Admin"}
           </h2>
 
-          {/* STATUS BOXES */}
+          {/* ORDER STATUS SECTION */}
           <div className="status-section">
             <div className="status-box status-all" onClick={() => goTo("/orders")}>
-              All Items
+              All Orders
               <span className="status-count">
                 {counts.Pending +
                   counts.Confirmed +
@@ -95,33 +131,43 @@ export default function Dashboard() {
               </span>
             </div>
 
-            <div className="status-box status-waiting" onClick={() => goTo("/orders/pending")}>
-              Waiting for Acceptance
+            <div className="status-box status-waiting">
+              Waiting
               <span className="status-count">{counts.Pending}</span>
             </div>
 
-            <div className="status-box status-confirmed" onClick={() => goTo("/orders/confirmed")}>
-              Booking Confirmed
+            <div className="status-box status-confirmed">
+              Confirmed
               <span className="status-count">{counts.Confirmed}</span>
             </div>
 
-            <div className="status-box status-shipped" onClick={() => goTo("/orders/shipped")}>
+            <div className="status-box status-shipped">
               Shipped
               <span className="status-count">{counts.Shipped}</span>
             </div>
 
-            <div className="status-box status-completed" onClick={() => goTo("/orders/delivered")}>
-              Completed
+            <div className="status-box status-completed">
+              Delivered
               <span className="status-count">{counts.Delivered}</span>
             </div>
 
-            <div className="status-box status-cancelled" onClick={() => goTo("/orders/cancelled")}>
+            <div className="status-box status-cancelled">
               Cancelled
               <span className="status-count">{counts.Cancelled}</span>
             </div>
           </div>
 
-          {/* PRODUCT WISE COUNT */}
+          {/* DATABASE PRODUCT STATS */}
+          <div className="status-section">
+            <h3 style={{ width: "100%" }}>Product Database Stats</h3>
+
+            <div className="status-box status-product">
+              Total Products
+              <span className="status-count">{subCategoryCount}</span>
+            </div>
+          </div>
+
+          {/* PRODUCT WISE ORDER COUNT */}
           <div className="status-section">
             <h3 style={{ width: "100%" }}>Product Wise Item Count</h3>
 
