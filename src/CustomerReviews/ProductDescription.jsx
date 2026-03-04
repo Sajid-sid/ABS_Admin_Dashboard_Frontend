@@ -39,16 +39,20 @@ useEffect(() => {
         }
 
     ]);
-
 const handleSubmit = async () => {
     try {
         console.log("📦 Sending Product ID:", id);
         console.log("📝 Sending Description:", formData.description);
-       console.log("🔥 FULL BODY:", req.body);
+
+        console.log("🔥 FULL BODY:", {
+            productId: id,
+            description: formData.description
+        });
+
         const response = await axios.post(
-            `${BASE_URL}/api/subcategories/products/overview`,
+            `${BASE_URL}/api/subcategories/products/overview`, // ✅ corrected route
             {
-                productId: id,   // ✅ VERY IMPORTANT
+                productId: id,
                 description: formData.description
             }
         );
