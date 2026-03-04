@@ -7,11 +7,10 @@ import "./AddSubCategory.css";
 import { DndContext, closestCenter, } from "@dnd-kit/core";
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy, } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-
-
+import { useNavigate } from "react-router-dom";
 const AddSubCategory = () => {
   const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
-
+const navigate = useNavigate();
   const initialState = {
     productCategory: "",
     subCategaryname: "",
@@ -77,6 +76,12 @@ const AddSubCategory = () => {
   };
 
 
+  const handleOverview = (id) => {
+    navigate(`/product-overview/${id}`);
+  };
+
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const form = new FormData();
@@ -105,19 +110,19 @@ const AddSubCategory = () => {
     }
 
     if (editingId) {
-  await axios.put(`${BASE_URL}/api/subcategories/${editingId}`, form);
-  alert("Updated");
-} else {
-  await axios.post(`${BASE_URL}/api/subcategories`, form);
-  alert("Added");
-}
+      await axios.put(`${BASE_URL}/api/subcategories/${editingId}`, form);
+      alert("Updated");
+    } else {
+      await axios.post(`${BASE_URL}/api/subcategories`, form);
+      alert("Added");
+    }
 
-/*  FULL FORM RESET */
-setEditingId(null);
-setFormData(initialState);
-setMediaFiles([]);
-setCarouselIndex({});
-fetchSubCategories();
+    /*  FULL FORM RESET */
+    setEditingId(null);
+    setFormData(initialState);
+    setMediaFiles([]);
+    setCarouselIndex({});
+    fetchSubCategories();
 
 
     setEditingId(null);
@@ -479,7 +484,15 @@ fetchSubCategories();
                   <div className="card-actions">
                     <button className="edit-btn" onClick={() => handleEdit(sub)}>Edit</button>
                     <button className="delete-sub-btn" onClick={() => handleDelete(sub.id)}>Delete</button>
+                  </div>
 
+                  <div className="product-overview-wrapper">
+                    <button
+                      className="product-overview-btn"
+                      onClick={() => handleOverview(sub.id)}
+                    >
+                      Product Overview
+                    </button>
                   </div>
                 </div>
               );

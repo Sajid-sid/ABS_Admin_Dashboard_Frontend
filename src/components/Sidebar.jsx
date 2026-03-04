@@ -131,9 +131,7 @@ export default function Sidebar() {
           <FaVideo /> {!collapsed && "Ad Videos"}
         </Link>
 
-        <Link to="/product-overview" className="nav-item">
-           ⭐ Product Overview
-        </Link>
+       
 
         <button onClick={handleLogout} className="nav-item">
           🚪 {!collapsed && "Logout"}

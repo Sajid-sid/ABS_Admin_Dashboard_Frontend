@@ -67,32 +67,49 @@
 }
 
 .review-box {
-  background: #fff;
-  padding: 15px;
-  margin-bottom: 15px;
-  border-radius: 6px;
-  border: 1px solid #eee;
+    background: #fff;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    border: 1px solid #eee;
 }
 
 .review-email {
-  font-weight: 600;
-  margin-bottom: 5px;
+    font-weight: 600;
+    margin-bottom: 5px;
 }
 
 .review-rating {
-  font-size: 13px;
-  margin-bottom: 5px;
-  color: #666;
+    font-size: 13px;
+    margin-bottom: 5px;
+    color: #666;
 }
 
 .po-review-stars {
-  color: #ff9800;
-  margin-bottom: 8px;
+    color: #ff9800;
+    margin-bottom: 8px;
 }
 
 .review-comment {
-  font-size: 14px;
-  line-height: 1.6;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.pd-submit-wrapper {
+    width: 100%;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.pd-submit-btn {
+    display: inline-block;
+    padding: 10px 24px;
+    background-color: #000;
+    color: #fff;
+    border: 1.5px solid #000;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
 }
 
 /* Responsive */

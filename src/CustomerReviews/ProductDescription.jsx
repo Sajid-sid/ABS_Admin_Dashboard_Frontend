@@ -1,17 +1,29 @@
 import React, { useState } from "react";
+import { useEffect } from "react";
+import axios from "axios";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 import "./ProductDescription.css";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 
+import { useParams } from "react-router-dom";
 
-
-const ProductDescription = () => {
+const ProductDescription = ({ productId }) => {
     const [activeTab, setActiveTab] = useState("overview");
-
+     const { id } = useParams();
+     console.log("🚀 Product ID from URL:", id);
     const [formData, setFormData] = useState({
+        productId: "",
         description: "",
     });
-
+useEffect(() => {
+    if (id) {
+        setFormData((prev) => ({
+            ...prev,
+            productId: id,
+        }));
+    }
+}, [id]);
     // Added only this missing state (no other logic changed)
     const [reviews, setReviews] = useState([
         {
@@ -21,12 +33,60 @@ const ProductDescription = () => {
         },
 
         {
-            email:"akash@example.com",
+            email: "akash@example.com",
             rating: 5,
             comment: "Best product in India."
         }
-        
+
     ]);
+
+const handleSubmit = async () => {
+    try {
+        console.log("📦 Sending Product ID:", id);
+        console.log("📝 Sending Description:", formData.description);
+       console.log("🔥 FULL BODY:", req.body);
+        const response = await axios.post(
+            `${BASE_URL}/api/subcategories/products/overview`,
+            {
+                productId: id,   // ✅ VERY IMPORTANT
+                description: formData.description
+            }
+        );
+
+        console.log("✅ Server Response:", response.data);
+        alert("Product Overview Saved Successfully ✅");
+
+    } catch (error) {
+        console.log("❌ Error:", error.response?.data || error.message);
+        alert("Error saving product overview ❌");
+    }
+};
+
+    // 🔥 ADD HERE
+    useEffect(() => {
+        if (!id) return;
+
+        const fetchOverview = async () => {
+            try {
+                const response = await axios.get(
+                    `${BASE}/api/products/${id}`
+                );
+
+                setFormData((prev) => ({
+                    ...prev,
+                    productId: response.data.id || response.data._id,
+                    description: response.data.description || "",
+                }));
+
+                setReviews(response.data.reviews || []);
+
+            } catch (error) {
+                console.log("Error fetching overview:", error);
+            }
+        };
+
+        fetchOverview();
+    }, [productId]);
 
     return (
         <div className="pd-container">
@@ -54,6 +114,17 @@ const ProductDescription = () => {
                 {/* OVERVIEW TAB */}
                 {activeTab === "overview" && (
                     <div>
+
+                        {/* ✅ Product ID Field Added */}
+                        <div className="pd-input-group">
+                            <label>Product ID</label>
+                            <input
+                                type="text"
+                                value={formData.productId}
+                                readOnly
+                            />
+                        </div>
+
                         <label>Description</label>
 
                         <CKEditor
@@ -101,8 +172,19 @@ const ProductDescription = () => {
                         )}
                     </div>
                 )}
+                  <div className="pd-submit-wrapper">
+               <button
+    type="button"
+    className="pd-submit-btn"
+    onClick={handleSubmit}
+>
+    Submit
+</button>
+            </div>
+            
             </div>
         </div>
+
     );
 };
 

@@ -134,7 +134,7 @@ const App = () => {
       />
 
       <Route
-        path="/product-overview"
+        path="/product-overview/:id"
         element={
           <PrivateRoute>
             <DashboardLayout>

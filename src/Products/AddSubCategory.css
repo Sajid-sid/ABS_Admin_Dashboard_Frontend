@@ -257,3 +257,36 @@
 .delete-sub-btn:hover {
   background: #dc2626;
 }
+
+/* Wrapper for spacing */
+.product-overview-wrapper {
+  margin-top: 14px;   /* Space below Edit/Delete buttons */
+  width: 100%;
+}
+
+/* Unique button styling */
+.product-overview-btn {
+  width: 100%;
+  padding: 9px 12px;
+  background-color: #333;
+  color:#fff;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  letter-spacing: 0.4px;
+  transition: all 0.3s ease;
+  margin-top: 13px;
+}
+
+/* Hover effect */
+.product-overview-btn:hover {
+  background-color: #333;
+  color: #fff;
+ 
+}
+
+/* Click effect */
+.product-overview-btn:active {
+  transform: scale(0.97);
+}
