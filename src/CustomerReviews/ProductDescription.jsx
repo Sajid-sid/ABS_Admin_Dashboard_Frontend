@@ -68,29 +68,36 @@ const handleSubmit = async () => {
 
     // 🔥 ADD HERE
     useEffect(() => {
-        if (!id) return;
+    if (!id) return;
 
-        const fetchOverview = async () => {
-            try {
-                const response = await axios.get(
-                    `${BASE}/api/products/${id}`
-                );
+    const fetchOverview = async () => {
+        try {
+            const response = await axios.get(
+                `${BASE_URL}/api/subcategories/products/overview/${id}`
+            );
 
-                setFormData((prev) => ({
-                    ...prev,
-                    productId: response.data.id || response.data._id,
-                    description: response.data.description || "",
-                }));
+            console.log("✅ Existing Description:", response.data);
 
-                setReviews(response.data.reviews || []);
+            setFormData({
+                productId: id,
+                description: response.data.description || "",
+            });
 
-            } catch (error) {
-                console.log("Error fetching overview:", error);
+        } catch (error) {
+            if (error.response?.status === 404) {
+                console.log("ℹ No description found. Ready to create.");
+                setFormData({
+                    productId: id,
+                    description: "",
+                });
+            } else {
+                console.log("❌ Fetch Error:", error);
             }
-        };
+        }
+    };
 
-        fetchOverview();
-    }, [productId]);
+    fetchOverview();
+}, [id]);
 
     return (
         <div className="pd-container">
