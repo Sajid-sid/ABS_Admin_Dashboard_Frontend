@@ -10,7 +10,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { useNavigate } from "react-router-dom";
 const AddSubCategory = () => {
   const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
-const navigate = useNavigate();
+  const navigate = useNavigate();
   const initialState = {
     productCategory: "",
     subCategaryname: "",
@@ -20,6 +20,8 @@ const navigate = useNavigate();
     brand: "",
     description: "",
     gender: "",
+    boxType: "",
+    weight: "",
     media: "",
   };
 
@@ -143,6 +145,8 @@ const navigate = useNavigate();
       brand: sub.brand || "",
       description: sub.description || "",
       gender: sub.gender || "",
+      boxType: sub.boxType || sub.box_type || "",
+      weight: sub.weight || "",
       media: sub.media || [],
     });
 
@@ -325,6 +329,29 @@ const navigate = useNavigate();
           </div>
         </div>
 
+        <div className="subcategory-row">
+          <div className="subcategory-field">
+            <label>Box Type</label>
+            <select name="boxType" value={formData.boxType} onChange={handleChange} >
+              <option value="">Select Box Type</option>
+              <option value="7 * 3.5 * 1">7 × 3.5 × 1 Box</option>
+              <option value="3.5 * 3.5 * 1">3.5 × 3.5 × 1 Box</option>
+            </select>
+          </div>
+          <div className="subcategory-field" >
+            <label>Weight (grams)</label>
+            <input
+              type="number"
+              name="weight"
+              placeholder="Enter weight"
+              step="0.01"
+              min="0"
+              value={formData.weight}
+              onChange={handleChange}
+            />
+          </div>
+        </div>
+
         <label>Description</label>
         <CKEditor
           editor={ClassicEditor}
@@ -480,6 +507,8 @@ const navigate = useNavigate();
                   <p><b>Category:</b> {sub.productCategory}</p>
                   <p><b>Price:</b> ₹{sub.price}</p>
                   <p><b>SKU:</b> {sub.sku}</p>
+                  <p><b>Box Type:</b> {sub.boxType || sub.box_type}</p>
+                  <p><b>Weight:</b> {sub.weight} g</p>
 
                   <div className="card-actions">
                     <button className="edit-btn" onClick={() => handleEdit(sub)}>Edit</button>
@@ -497,8 +526,6 @@ const navigate = useNavigate();
                 </div>
               );
             })}
-
-
 
           </div>
         </>
