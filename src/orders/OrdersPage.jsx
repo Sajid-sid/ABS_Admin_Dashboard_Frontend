@@ -351,24 +351,83 @@ export default function OrdersPage() {
               </div>
 
               <div className="modal-footer">
-                <button className="btn gold" onClick={async () => {
-                  for (const it of selectedOrder.items) {
-                    const newStatus = itemStatuses[it.id];
-                    if (!newStatus) continue;
-                    if (newStatus === "Confirmed" && it.quantity > (stockMap[it.productName.toLowerCase()] || 0)) {
-                      alert(`Cannot confirm: insufficient stock for ${it.productName}`);
-                      continue;
-                    }
-                    await fetch(`${API_BASE}/api/orders/${selectedOrder.id}/items/${it.id}/status`, {
-                      method: "PUT",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ status: newStatus }),
-                    });
-                  }
-                  alert("All item statuses updated!");
-                  fetchOrders();
-                  closeDetails();
-                }}>Submit</button>
+<button
+  className="btn gold"
+  onClick={async () => {
+    try {
+      setUpdatingStatus(true);
+
+      let hasConfirmed = false;
+
+      // 🔹 Step 1: Validate stock before confirming
+      for (const it of selectedOrder.items) {
+        const newStatus = itemStatuses[it.id];
+
+        if (!newStatus) continue;
+
+        if (newStatus === "Confirmed") {
+          hasConfirmed = true;
+
+          if (
+            it.quantity >
+            (stockMap[it.productName.toLowerCase()] || 0)
+          ) {
+            alert(`Cannot confirm: insufficient stock for ${it.productName}`);
+            return;
+          }
+        }
+      }
+
+      // 🔹 Step 2: If confirmed → create shipment
+      if (hasConfirmed) {
+        const confirmRes = await fetch(
+  `${API_BASE}/api/orders/${selectedOrder.id}/status`,
+  {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status: "Confirmed" }),
+  }
+);
+
+        const confirmData = await confirmRes.json();
+
+        if (!confirmData.success) {
+          alert(confirmData.message || "Shipment creation failed");
+          return;
+        }
+
+        alert(`Shipment Created! AWB: ${confirmData.awb || "-"}`);
+      }
+
+      // 🔹 Step 3: Update item statuses
+      for (const it of selectedOrder.items) {
+        const newStatus = itemStatuses[it.id];
+        if (!newStatus) continue;
+
+        await fetch(
+          `${API_BASE}/api/orders/${selectedOrder.id}/items/${it.id}/status`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: newStatus }),
+          }
+        );
+      }
+
+      alert("All item statuses updated!");
+      fetchOrders();
+      closeDetails();
+
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong");
+    } finally {
+      setUpdatingStatus(false);
+    }
+  }}
+>
+  Submit
+</button>
                 <button className="btn close" onClick={closeDetails}>Close</button>
               </div>
             </div>
