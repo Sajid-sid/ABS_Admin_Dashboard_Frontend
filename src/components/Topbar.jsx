@@ -17,9 +17,18 @@ export default function Topbar() {
 
   return (
     <div className="topbar">
-      <div>
-        <h2>Hello {user?.name || "Admin"},</h2>
-        <p>Here you can manage your stores.</p>
+     <div>
+        <button
+          className="website-btn"
+          onClick={() =>
+            window.open(
+              "https://www.aspirebrand.store",
+              "_blank"
+            )
+          }
+        >
+          Visit Website
+        </button>
       </div>
 
       <div className="admin-info">
