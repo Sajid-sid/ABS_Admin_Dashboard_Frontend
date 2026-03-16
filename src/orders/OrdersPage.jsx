@@ -351,97 +351,103 @@ export default function OrdersPage() {
               </div>
 
               <div className="modal-footer">
-              <button
+<button
   className="btn gold"
-onClick={async () => {
-  try {
-    setUpdatingStatus(true);
+  onClick={async () => {
+    try {
+      setUpdatingStatus(true);
 
-    // 1️⃣ Check if any item is being confirmed and stock is enough
-    let hasConfirmed = false;
-    for (const item of selectedOrder.items) {
-      const newStatus = itemStatuses[item.id];
-      if (!newStatus) continue;
+      // 1️⃣ Get confirmed item IDs
+      const confirmedItems = selectedOrder.items
+        .filter(item => itemStatuses[item.id] === "Confirmed")
+        .map(item => item.id);
 
-      if (newStatus === "Confirmed") {
-        hasConfirmed = true;
-        const availableStock = stockMap[item.productName.toLowerCase()] || 0;
-        if (item.quantity > availableStock) {
-          alert(`Cannot confirm: insufficient stock for ${item.productName}`);
+      // 2️⃣ Validate stock before confirming
+      for (const item of selectedOrder.items) {
+        const newStatus = itemStatuses[item.id];
+
+        if (newStatus === "Confirmed") {
+          const availableStock =
+            stockMap[item.productName.toLowerCase()] || 0;
+
+          if (item.quantity > availableStock) {
+            alert(`Cannot confirm: insufficient stock for ${item.productName}`);
+            return;
+          }
+        }
+      }
+
+      let awbNumber = "-";
+
+      // 3️⃣ Create shipment if items are confirmed
+      if (confirmedItems.length > 0) {
+        const confirmRes = await fetch(
+          `${API_BASE}/api/orders/confirm/${selectedOrder.id}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              items: confirmedItems
+            })
+          }
+        );
+
+        if (!confirmRes.ok) {
+          const text = await confirmRes.text();
+          console.error("Confirm order failed:", text);
+          alert("Shipment creation failed: Server error");
           return;
         }
-      }
-    }
 
-    let awbNumber = "-";
+        const confirmData = await confirmRes.json();
 
-    // 2️⃣ Confirm order and create shipment if at least one item is confirmed
-    if (hasConfirmed) {
-      const confirmRes = await fetch(
-        `${API_BASE}/api/orders/confirm/${selectedOrder.id}`,
-        {
-          method: "PUT", // ✅ must match backend
-          headers: { "Content-Type": "application/json" },
+        if (!confirmData.success) {
+          alert(confirmData.message || "Shipment creation failed");
+          return;
         }
+
+        awbNumber = confirmData.shipmentRef || "-";
+      }
+
+      // 4️⃣ Update each item status
+      for (const item of selectedOrder.items) {
+        const newStatus = itemStatuses[item.id];
+
+        if (!newStatus || newStatus === item.itemStatus) continue;
+
+        const res = await fetch(
+          `${API_BASE}/api/orders/${selectedOrder.id}/items/${item.id}/status`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: newStatus }),
+          }
+        );
+
+        if (!res.ok) {
+          const text = await res.text();
+          console.error("Update item status failed:", text);
+        }
+      }
+
+      // 5️⃣ Show result
+      alert(
+        confirmedItems.length > 0
+          ? `Shipment confirmed! AWB: ${awbNumber}`
+          : "All item statuses updated!"
       );
 
-      if (!confirmRes.ok) {
-        const text = await confirmRes.text();
-        console.error("Confirm order failed:", text);
-        alert("Shipment creation failed: Server error");
-        return;
-      }
+      // 6️⃣ Refresh UI
+      fetchOrders();
+      closeDetails();
 
-      const confirmData = await confirmRes.json();
-
-      if (!confirmData.success) {
-        alert(confirmData.message || "Shipment creation failed");
-        return;
-      }
-
-      // Safely get AWB / shipment_ref
-      const shipments = confirmData.ithinkResponse?.data || {};
-      const firstShipment = Object.values(shipments)[0] || {};
-      awbNumber = firstShipment.refnum || firstShipment.waybill || "-";
+    } catch (err) {
+      console.error("Error in submitting order:", err);
+      alert("Something went wrong. Check console for details.");
+    } finally {
+      setUpdatingStatus(false);
     }
-
-    // 3️⃣ Update each item status
-    for (const item of selectedOrder.items) {
-      const newStatus = itemStatuses[item.id];
-      if (!newStatus || newStatus === item.itemStatus) continue;
-
-      const res = await fetch(
-        `${API_BASE}/api/orders/${selectedOrder.id}/items/${item.id}/status`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: newStatus }),
-        }
-      );
-
-      if (!res.ok) {
-        const text = await res.text();
-        console.error("Update item status failed:", text);
-      }
-    }
-
-    // 4️⃣ Final alert
-    alert(
-      hasConfirmed
-        ? `Shipment confirmed! AWB: ${awbNumber}`
-        : "All item statuses updated!"
-    );
-
-    // 5️⃣ Refresh UI
-    fetchOrders();
-    closeDetails();
-  } catch (err) {
-    console.error("Error in submitting order:", err);
-    alert("Something went wrong. Check console for details.");
-  } finally {
-    setUpdatingStatus(false);
-  }
-}}
+  }}
 >
   Submit
 </button>
