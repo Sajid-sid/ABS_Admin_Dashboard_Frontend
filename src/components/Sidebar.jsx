@@ -14,6 +14,7 @@ import { FaVideo } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../redux/authSlice";
 import { useNavigate } from "react-router-dom";
+import FontSelector from "../components/FontSelector";
 
 
 export default function Sidebar() {
@@ -21,6 +22,8 @@ export default function Sidebar() {
   const [productMenuOpen, setProductMenuOpen] = useState(false);
   const [orderMenuOpen, setOrderMenuOpen] = useState(false);
   const [stockMenuOpen, setStockMenuOpen] = useState(false);
+  const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
+  const [showTypography, setShowTypography] = useState(false);
 
 
   const dispatch = useDispatch();
@@ -130,8 +133,50 @@ export default function Sidebar() {
         <Link to="/ad-videos" className="nav-item">
           <FaVideo /> {!collapsed && "Ad Videos"}
         </Link>
+        {/* ---- Settings Menu ---- */}
+        <div className="nav-item settings-menu">
+          <div
+            className="nav-item-header"
+            onClick={() => setSettingsMenuOpen(!settingsMenuOpen)}
+          >
+            ⚙️
+            {!collapsed && (
+              <>
+                <span className="menu-title">Settings</span>
+                {settingsMenuOpen ? <FaChevronUp /> : <FaChevronDown />}
+              </>
+            )}
+          </div>
 
-       
+          {!collapsed && settingsMenuOpen && (
+            <div className="submenu">
+
+              <Link to="/update-password" className="submenu-item">
+                👤 Update password
+              </Link>
+
+
+              {/* 🔤 Typography Toggle */}
+              <div
+                className="submenu-item"
+                onClick={() => setShowTypography(!showTypography)}
+                style={{ cursor: "pointer" }}
+              >
+                <span>🔤 Typography</span>
+                {showTypography ? "▲" : "▼"}
+              </div>
+
+              {/* 🔽 Show Font Selector only when clicked */}
+              {showTypography && (
+                <div className="submenu-item">
+                  <FontSelector />
+                </div>
+              )}
+
+            </div>
+          )}
+        </div>
+
 
         <button onClick={handleLogout} className="nav-item">
           🚪 {!collapsed && "Logout"}

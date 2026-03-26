@@ -1,3 +1,13 @@
+/* Fix form elements specifically */
+input,
+textarea,
+select,
+button {
+  font-family: var(--app-font) !important;
+}
+
+
+
 .auth-container {
   display: flex;
   justify-content: center;

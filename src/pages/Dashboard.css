@@ -2,7 +2,7 @@
 .dashboard {
   display: flex;
   height: 90vh;
-  font-family: "Segoe UI", sans-serif;
+
   background-color: #f5f6f8;
   color: #333;
 }
@@ -337,7 +337,7 @@ button.nav-item {
   width: 100%;
   text-align: left;
   cursor: pointer;
-  font-family: inherit;
+
 }
 
 

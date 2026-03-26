@@ -12,6 +12,7 @@ import Banner from './Banner/BannerManager';
 import AddAdVideos from "./adVideo/AddAdVideos";
 import StockInformation from "./StockInformation/StockInformation";
 import ProductOverview from "./CustomerReviews/ProductDescription";
+import UpdatePassword from "./pages/UpdatePassword";
 
 // Protect routes
 const PrivateRoute = ({ children }) => {
@@ -128,6 +129,17 @@ const App = () => {
           <PrivateRoute>
             <DashboardLayout>
               <AddAdVideos />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+        path="/update-password"   // ✅ FIXED (lowercase + hyphen)
+        element={
+          <PrivateRoute>
+            <DashboardLayout>
+              <UpdatePassword />
             </DashboardLayout>
           </PrivateRoute>
         }
