@@ -13,6 +13,7 @@ import AddAdVideos from "./adVideo/AddAdVideos";
 import StockInformation from "./StockInformation/StockInformation";
 import ProductOverview from "./CustomerReviews/ProductDescription";
 import UpdatePassword from "./pages/UpdatePassword";
+import CouponManager from "./coupons/CouponManager";
 
 // Protect routes
 const PrivateRoute = ({ children }) => {
@@ -98,7 +99,7 @@ const App = () => {
         }
       />
 
-      {/* ⭐ ---- Stock Information ---- */}
+      {/*  ---- Stock Information ---- */}
       <Route
         path="/stock-information"
         element={
@@ -124,6 +125,17 @@ const App = () => {
       />
 
       <Route
+        path="/coupons"
+        element={
+          <PrivateRoute>
+            <DashboardLayout>
+              <CouponManager />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
         path="/ad-videos"
         element={
           <PrivateRoute>
@@ -135,7 +147,7 @@ const App = () => {
       />
 
       <Route
-        path="/update-password"   // ✅ FIXED (lowercase + hyphen)
+        path="/update-password"   
         element={
           <PrivateRoute>
             <DashboardLayout>

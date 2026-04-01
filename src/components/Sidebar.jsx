@@ -129,6 +129,9 @@ export default function Sidebar() {
         <Link to="/banner" className="nav-item">
           🖼️ {!collapsed && "Banner"}
         </Link>
+        <Link to="/coupons" className="nav-item">
+          🎟️ {!collapsed && "Coupons"}
+        </Link>
 
         <Link to="/ad-videos" className="nav-item">
           <FaVideo /> {!collapsed && "Ad Videos"}
