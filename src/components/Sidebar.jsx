@@ -133,6 +133,10 @@ export default function Sidebar() {
           🎟️ {!collapsed && "Coupons"}
         </Link>
 
+        <Link to="/site-settings" className="nav-item">
+          ⚙️ {!collapsed && "Site Settings"}
+        </Link>
+
         <Link to="/ad-videos" className="nav-item">
           <FaVideo /> {!collapsed && "Ad Videos"}
         </Link>

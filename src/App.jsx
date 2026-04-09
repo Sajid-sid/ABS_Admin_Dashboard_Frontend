@@ -14,6 +14,8 @@ import StockInformation from "./StockInformation/StockInformation";
 import ProductOverview from "./CustomerReviews/ProductDescription";
 import UpdatePassword from "./pages/UpdatePassword";
 import CouponManager from "./coupons/CouponManager";
+import SiteSettings from "./settings/WebSettings";
+
 
 // Protect routes
 const PrivateRoute = ({ children }) => {
@@ -130,6 +132,16 @@ const App = () => {
           <PrivateRoute>
             <DashboardLayout>
               <CouponManager />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/site-settings"
+        element={
+          <PrivateRoute>
+            <DashboardLayout>
+              <SiteSettings />
             </DashboardLayout>
           </PrivateRoute>
         }
