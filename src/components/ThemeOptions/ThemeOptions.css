@@ -1,0 +1,175 @@
+/* CONTAINER */
+.to-theme-container {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #f4f6fb;
+  min-height: 100vh;
+}
+
+/* HEADER */
+.to-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 25px;
+  background: #fff;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.to-topbar h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #222;
+}
+
+/* BUTTONS */
+.to-top-buttons button {
+  margin-left: 10px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  background: #1976d2;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.to-top-buttons button:hover {
+  background: #125ea8;
+}
+
+/* LAYOUT */
+.to-main {
+  display: flex;
+  min-height: calc(100vh - 70px);
+}
+
+/* SIDEBAR */
+.to-theme-options-list {
+  width: 260px;
+  background: #fff;
+  border-right: 1px solid #e9e9e9;
+  padding: 18px 10px;
+}
+
+/* MAIN MENU */
+.to-theme-options-list>p {
+  padding: 10px 14px;
+  font-size: 15px;
+  color: #555;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: 0.2s;
+}
+
+/* ONLY TEXT HOVER */
+.to-theme-options-list>p:hover {
+  background: transparent;
+  color: #000;
+}
+
+/* ACTIVE MENU */
+.to-active-menu {
+  background:rgb(207, 207, 6);
+  color: #000;
+  font-weight: 800;
+}
+
+/* SUBMENU */
+.to-submenu {
+  margin: 8px 0 12px 12px;
+  padding-left: 10px;
+  border-left: 2px solid #ddd;
+}
+
+.to-submenu p {
+  padding: 6px 10px;
+  font-size: 14px;
+  color: #110a0a;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+/* SUBMENU HOVER */
+.to-submenu p:hover {
+  background: transparent;
+  color: #000;
+}
+
+/* ACTIVE SUB */
+.to-active-sub {
+  color: #666;        /* same as normal text */
+  font-weight: normal;
+}
+
+/* CATEGORY */
+.to-category-title {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 500;
+  color: #555;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.to-category-title:hover {
+  background: transparent;
+  color: #000;
+}
+
+/* LEVEL 2 */
+.to-submenu-level2 {
+  margin-left: 10px;
+  padding-left: 10px;
+  border-left: 2px solid #eee;
+}
+
+/* LEVEL 3 */
+.to-submenu-level3 {
+  margin-left: 10px;
+  padding-left: 10px;
+  border-left: 1px dashed #ddd;
+}
+
+.to-submenu-level3 p {
+  font-size: 13px;
+  color: #777;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.to-submenu-level3 p:hover {
+  background: transparent;
+  color: #000;
+}
+
+/* CONTENT */
+.to-content {
+  flex: 1;
+  padding: 30px;
+  background: #fff;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1000px) {
+  .to-main {
+    flex-direction: column;
+  }
+
+  .to-theme-options-list {
+    width: 100%;
+    display: flex;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .to-theme-options-list>p {
+    white-space: nowrap;
+    margin-right: 10px;
+  }
+
+  .to-submenu {
+    display: none;
+  }
+}

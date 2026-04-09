@@ -17,6 +17,8 @@ import CouponManager from "./coupons/CouponManager";
 import SiteSettings from "./settings/WebSettings";
 
 
+import ThemeOptions from "./components/ThemeOptions/ThemeOptions";
+
 // Protect routes
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem("token");
@@ -25,7 +27,9 @@ const PrivateRoute = ({ children }) => {
 
 const App = () => {
   return (
+    
     <Routes>
+
       {/* ---- Public Route ---- */}
       <Route path="/" element={<Login />} />
 
@@ -180,10 +184,22 @@ const App = () => {
         }
       />
 
+         <Route
+          path="/theme-options"
+          element={
+            <PrivateRoute>
+              <DashboardLayout>
+                <ThemeOptions />
+              </DashboardLayout>
+            </PrivateRoute>
+          }
+        />
+        
 
       {/* ---- Default Fallback ---- */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
+    
   );
 };
 

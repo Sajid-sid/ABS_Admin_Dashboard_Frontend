@@ -137,9 +137,14 @@ export default function Sidebar() {
           ⚙️ {!collapsed && "Site Settings"}
         </Link>
 
+         <Link to="/theme-options" className="nav-item">
+          🛒 {!collapsed && "Store Settings"}
+        </Link>
+
         <Link to="/ad-videos" className="nav-item">
           <FaVideo /> {!collapsed && "Ad Videos"}
         </Link>
+
         {/* ---- Settings Menu ---- */}
         <div className="nav-item settings-menu">
           <div
