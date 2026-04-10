@@ -163,27 +163,16 @@ export default function Sidebar() {
           {!collapsed && settingsMenuOpen && (
             <div className="submenu">
 
-              <Link to="/update-password" className="submenu-item">
+            <Link to="/update-my-password" className="submenu-item">
                 👤 Update password
               </Link>
 
+                <Link to="/manage-user" className="submenu-item">
+                👤 ManageUser
+              </Link>
 
-              {/* 🔤 Typography Toggle */}
-              <div
-                className="submenu-item"
-                onClick={() => setShowTypography(!showTypography)}
-                style={{ cursor: "pointer" }}
-              >
-                <span>🔤 Typography</span>
-                {showTypography ? "▲" : "▼"}
-              </div>
 
-              {/* 🔽 Show Font Selector only when clicked */}
-              {showTypography && (
-                <div className="submenu-item">
-                  <FontSelector />
-                </div>
-              )}
+             
 
             </div>
           )}

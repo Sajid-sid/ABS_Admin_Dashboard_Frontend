@@ -12,11 +12,11 @@ import Banner from './Banner/BannerManager';
 import AddAdVideos from "./adVideo/AddAdVideos";
 import StockInformation from "./StockInformation/StockInformation";
 import ProductOverview from "./CustomerReviews/ProductDescription";
-import UpdatePassword from "./pages/UpdatePassword";
+import UpdatePassword from "./ManageUsers/UpdatePassword";
 import CouponManager from "./coupons/CouponManager";
 import SiteSettings from "./settings/WebSettings";
 
-
+import ManageUser from "./ManageUsers/ManageUser";
 import ThemeOptions from "./components/ThemeOptions/ThemeOptions";
 
 // Protect routes
@@ -162,12 +162,35 @@ const App = () => {
         }
       />
 
+      
       <Route
-        path="/update-password"   
+        path="/update-password/:id"
         element={
           <PrivateRoute>
             <DashboardLayout>
               <UpdatePassword />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
+      <Route
+  path="/update-my-password"
+  element={
+    <PrivateRoute>
+      <DashboardLayout>
+        <UpdatePassword />
+      </DashboardLayout>
+    </PrivateRoute>
+  }
+/>
+
+           <Route
+        path="/manage-user"   // ✅ FIXED (lowercase + hyphen)
+        element={
+          <PrivateRoute>
+            <DashboardLayout>
+              <ManageUser />
             </DashboardLayout>
           </PrivateRoute>
         }
