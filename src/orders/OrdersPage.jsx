@@ -229,7 +229,9 @@ export default function OrdersPage() {
                     <div className="cust-address">{o.address}</div>
                   </div>
                   <div className="col-items">{o.items?.length ?? 0}</div>
-                  <div className="col-total">₹{Number(o.totalAmount).toFixed(2)}</div>
+                 <div className="col-total">
+  ₹{Number(o.finalAmount || o.totalAmount).toFixed(2)}
+</div>
                   <div className="col-status">
                     {
                       (() => {
@@ -286,7 +288,9 @@ export default function OrdersPage() {
                 <div>
                   <strong>Order Info</strong>
 
-                  <div>Total: ₹{Number(selectedOrder.totalAmount).toFixed(2)}</div>
+                 <div>
+  Total: ₹{Number(selectedOrder.finalAmount || selectedOrder.totalAmount).toFixed(2)}
+</div>
 
                   <div>
                     Payment Method: <b>{selectedOrder.paymentMethod}</b>

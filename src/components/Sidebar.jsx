@@ -22,6 +22,7 @@ export default function Sidebar() {
   const [productMenuOpen, setProductMenuOpen] = useState(false);
   const [orderMenuOpen, setOrderMenuOpen] = useState(false);
   const [stockMenuOpen, setStockMenuOpen] = useState(false);
+  const [couponMenuOpen, setCouponMenuOpen] = useState(false);
   const [settingsMenuOpen, setSettingsMenuOpen] = useState(false);
   const [showTypography, setShowTypography] = useState(false);
 
@@ -129,22 +130,37 @@ export default function Sidebar() {
         <Link to="/banner" className="nav-item">
           🖼️ {!collapsed && "Banner"}
         </Link>
-        <Link to="/coupons" className="nav-item">
-          🎟️ {!collapsed && "Coupons"}
-        </Link>
+      {/* ---- Coupons Menu ---- */}
+<div className="nav-item coupon-menu">
+  <div
+    className="nav-item-header"
+    onClick={() => setCouponMenuOpen(!couponMenuOpen)}
+  >
+    🎟️
+    {!collapsed && (
+      <>
+        <span className="menu-title">Coupons</span>
+        {couponMenuOpen ? <FaChevronUp /> : <FaChevronDown />}
+      </>
+    )}
+  </div>
 
-        <Link to="/site-settings" className="nav-item">
-          ⚙️ {!collapsed && "Site Settings"}
-        </Link>
+  {!collapsed && couponMenuOpen && (
+    <div className="submenu">
+      <Link to="/coupons" className="submenu-item">
+        🎟️ All Coupons
+      </Link>
 
-         <Link to="/theme-options" className="nav-item">
-          🛒 {!collapsed && "Store Settings"}
-        </Link>
+      <Link to="/offers" className="submenu-item">
+        🎁 BOGO Offers
+      </Link>
+    </div>
+  )}
+</div>
 
         <Link to="/ad-videos" className="nav-item">
           <FaVideo /> {!collapsed && "Ad Videos"}
         </Link>
-
         {/* ---- Settings Menu ---- */}
         <div className="nav-item settings-menu">
           <div
@@ -163,16 +179,27 @@ export default function Sidebar() {
           {!collapsed && settingsMenuOpen && (
             <div className="submenu">
 
-            <Link to="/update-my-password" className="submenu-item">
+              <Link to="/update-password" className="submenu-item">
                 👤 Update password
               </Link>
 
-                <Link to="/manage-user" className="submenu-item">
-                👤 ManageUser
-              </Link>
 
+              {/* 🔤 Typography Toggle */}
+              <div
+                className="submenu-item"
+                onClick={() => setShowTypography(!showTypography)}
+                style={{ cursor: "pointer" }}
+              >
+                <span>🔤 Typography</span>
+                {showTypography ? "▲" : "▼"}
+              </div>
 
-             
+              {/* 🔽 Show Font Selector only when clicked */}
+              {showTypography && (
+                <div className="submenu-item">
+                  <FontSelector />
+                </div>
+              )}
 
             </div>
           )}

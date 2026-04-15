@@ -15,7 +15,7 @@ import ProductOverview from "./CustomerReviews/ProductDescription";
 import UpdatePassword from "./ManageUsers/UpdatePassword";
 import CouponManager from "./coupons/CouponManager";
 import SiteSettings from "./settings/WebSettings";
-
+import OffersManager from "./coupons/OffersManager"
 import ManageUser from "./ManageUsers/ManageUser";
 import ThemeOptions from "./components/ThemeOptions/ThemeOptions";
 
@@ -140,6 +140,17 @@ const App = () => {
           </PrivateRoute>
         }
       />
+      
+<Route
+  path="/offers"
+  element={
+    <PrivateRoute>
+      <DashboardLayout>
+        <OffersManager />
+      </DashboardLayout>
+    </PrivateRoute>
+  }
+/>
       <Route
         path="/site-settings"
         element={
