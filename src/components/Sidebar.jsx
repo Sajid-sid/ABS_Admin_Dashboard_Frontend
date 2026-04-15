@@ -78,7 +78,7 @@ export default function Sidebar() {
           )}
         </div>
 
-        {/* ⭐ NEW — STOCK DROPDOWN (REPLACES OLD StockInformation LINK) */}
+
         <div className="nav-item stock-menu">
           <div
             className="nav-item-header"
@@ -100,6 +100,14 @@ export default function Sidebar() {
             </div>
           )}
         </div>
+
+         <Link to="/site-settings" className="nav-item">
+          ⚙️ {!collapsed && "Site Settings"}
+        </Link>
+
+         <Link to="/theme-options" className="nav-item">
+          🛒 {!collapsed && "Store Settings"}
+        </Link>
 
         {/* ---- Order Summary Menu ---- */}
         <div className="nav-item order-menu">
@@ -130,33 +138,33 @@ export default function Sidebar() {
         <Link to="/banner" className="nav-item">
           🖼️ {!collapsed && "Banner"}
         </Link>
-      {/* ---- Coupons Menu ---- */}
-<div className="nav-item coupon-menu">
-  <div
-    className="nav-item-header"
-    onClick={() => setCouponMenuOpen(!couponMenuOpen)}
-  >
-    🎟️
-    {!collapsed && (
-      <>
-        <span className="menu-title">Coupons</span>
-        {couponMenuOpen ? <FaChevronUp /> : <FaChevronDown />}
-      </>
-    )}
-  </div>
+        {/* ---- Coupons Menu ---- */}
+        <div className="nav-item coupon-menu">
+          <div
+            className="nav-item-header"
+            onClick={() => setCouponMenuOpen(!couponMenuOpen)}
+          >
+            🎟️
+            {!collapsed && (
+              <>
+                <span className="menu-title">Coupons</span>
+                {couponMenuOpen ? <FaChevronUp /> : <FaChevronDown />}
+              </>
+            )}
+          </div>
 
-  {!collapsed && couponMenuOpen && (
-    <div className="submenu">
-      <Link to="/coupons" className="submenu-item">
-        🎟️ All Coupons
-      </Link>
+          {!collapsed && couponMenuOpen && (
+            <div className="submenu">
+              <Link to="/coupons" className="submenu-item">
+                🎟️ All Coupons
+              </Link>
 
-      <Link to="/offers" className="submenu-item">
-        🎁 BOGO Offers
-      </Link>
-    </div>
-  )}
-</div>
+              <Link to="/offers" className="submenu-item">
+                🎁 BOGO Offers
+              </Link>
+            </div>
+          )}
+        </div>
 
         <Link to="/ad-videos" className="nav-item">
           <FaVideo /> {!collapsed && "Ad Videos"}
