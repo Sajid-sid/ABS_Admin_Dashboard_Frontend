@@ -46,11 +46,14 @@ const getId = (o) => o._id || o.id; // universal id fix
 // ── EMPTY FORM ──────────────────────
 const EMPTY_FORM = {
   coupon_code: "",
+   title: "",
   buy_qty: "",
   get_qty: "",
-  uses_per_user: "1",
+  uses_per_user: "",
   expiry_date: "",
   first_order_only: false,
+  category: "",
+    is_active: true,
 };
 
 // ── COMPONENT ──────────────────────
@@ -70,6 +73,16 @@ export default function OfferManager() {
   const load = useCallback(async () => {
     setLoading(true);
     const res = await api(PUBLIC_API); // Only public GET
+     console.log("📦 Offers API Response:", res);
+
+  (res.offers ?? []).forEach((o) => {
+    console.log("🎯 Offer:", {
+      id: o.id,
+      title: o.title,
+      coupon: o.coupon_code,
+      active: o.is_active,
+    });
+  });
     if (res.success) {
       const normalized = (res.offers || []).map((o) => ({ ...o, _id: getId(o) }));
       setOffers(normalized);
@@ -105,11 +118,14 @@ export default function OfferManager() {
 
     setForm({
       coupon_code: o.coupon_code,
+        title: o.title || "",
       buy_qty: o.buy_qty,
       get_qty: o.get_qty,
       uses_per_user: o.uses_per_user || 1,
       expiry_date: o.expiry_date?.slice(0, 10) || "",
       first_order_only: !!o.first_order_only,
+        category: o.category || "",
+          is_active: o.is_active,
     });
     setEditingId(id);
     setShowModal(true);
@@ -119,13 +135,17 @@ export default function OfferManager() {
   const handleSave = async () => {
     if (!form.coupon_code.trim()) return notify("Coupon required", "error");
 
+
     const payload = {
       ...form,
       coupon_code: form.coupon_code.toUpperCase(),
+      title: form.title,
       buy_qty: Number(form.buy_qty),
       get_qty: Number(form.get_qty),
       uses_per_user: Number(form.uses_per_user || 1),
+        category: form.category || null,
       expiry_date: form.expiry_date || null,
+        is_active: form.is_active,
     };
 
     const isEdit = !!editingId;
@@ -168,7 +188,7 @@ export default function OfferManager() {
       load();
     } else {
       notify(res.message, "error");
-    }
+    } 
   };
 
   const Badge = ({ children, type = "default" }) => {
@@ -305,6 +325,8 @@ export default function OfferManager() {
               <tr>
                 <th>Code</th>
                 <th>BOGO</th>
+                <th>Title</th>
+                 <th>Category</th>
                 <th>Expiry</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -317,6 +339,9 @@ export default function OfferManager() {
                   <tr key={getId(o) || o.coupon_code}>
                     <td>{o.coupon_code}</td>
                     <td>Buy {o.buy_qty} Get {o.get_qty}</td>
+                    <td>{o.uses_per_user || 1}</td>
+                    <td>{o.title}</td>
+                    <td>{o.category || "All"}</td>
                     <td style={{ color: exp ? "red" : "black" }}>{formatDate(o.expiry_date)}</td>
                     <td>
                       <span className={o.is_active ? "active" : "inactive"}>
@@ -351,7 +376,10 @@ export default function OfferManager() {
               <label>Coupon Code</label>
               <input placeholder="Enter coupon code" value={form.coupon_code} onChange={(e) => setForm({ ...form, coupon_code: e.target.value })} />
             </div>
-
+  <div className="form-group">
+              <label>title</label>
+              <input placeholder="Enter title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+            </div>
             <div className="form-group">
               <label>Buy Quantity</label>
               <input type="number" placeholder="Enter buy quantity" value={form.buy_qty} onChange={(e) => setForm({ ...form, buy_qty: e.target.value })} />
@@ -361,7 +389,20 @@ export default function OfferManager() {
               <label>Get Quantity</label>
               <input type="number" placeholder="Enter get quantity" value={form.get_qty} onChange={(e) => setForm({ ...form, get_qty: e.target.value })} />
             </div>
+             <label>Category</label>
 
+<select
+  value={form.category}
+  onChange={(e) =>
+    setForm({ ...form, category: e.target.value })
+  }
+>
+  
+  <option value="">All Categories</option>
+  <option value="Necklaces">Necklace</option>
+  <option value="rings">rings</option>
+  <option value="earrings">earrings</option>
+</select>
             <div className="form-group">
               <label>Expiry Date</label>
               <input type="date" value={form.expiry_date} onChange={(e) => setForm({ ...form, expiry_date: e.target.value })} />
