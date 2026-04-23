@@ -190,9 +190,12 @@ export default function Sidebar() {
               <Link to="/update-password" className="submenu-item">
                 👤 Update password
               </Link>
+              <Link to="/manage-user" className="submenu-item">
+                👤 Manage Users
+              </Link>
 
 
-              {/* 🔤 Typography Toggle */}
+              {/*  Typography Toggle */}
               <div
                 className="submenu-item"
                 onClick={() => setShowTypography(!showTypography)}
@@ -202,7 +205,7 @@ export default function Sidebar() {
                 {showTypography ? "▲" : "▼"}
               </div>
 
-              {/* 🔽 Show Font Selector only when clicked */}
+              {/*  Show Font Selector only when clicked */}
               {showTypography && (
                 <div className="submenu-item">
                   <FontSelector />
