@@ -105,6 +105,12 @@ export default function Sidebar() {
           ⚙️ {!collapsed && "Site Settings"}
         </Link>
 
+
+    <Link to="/returns" className="nav-item">
+          ⚙️ {!collapsed && "Return Orders"}
+        </Link>
+
+
          <Link to="/theme-options" className="nav-item">
           🛒 {!collapsed && "Store Settings"}
         </Link>

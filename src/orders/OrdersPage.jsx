@@ -229,9 +229,21 @@ export default function OrdersPage() {
                     <div className="cust-address">{o.address}</div>
                   </div>
                   <div className="col-items">{o.items?.length ?? 0}</div>
-                 <div className="col-total">
-  ₹{Number(o.finalAmount || o.totalAmount).toFixed(2)}
-</div>
+                  <div className="col-total">
+                    <div>₹{Number(o.finalAmount || o.totalAmount).toFixed(2)}</div>
+
+                    {o.discount_amount > 0 && (
+                      <div style={{ fontSize: "12px", color: "#10b981" }}>
+                        -₹{Number(o.discount_amount).toFixed(2)}
+                      </div>
+                    )}
+
+                    {o.coupon_code && (
+                      <div style={{ fontSize: "11px", color: "#6366f1" }}>
+                        {o.coupon_code}
+                      </div>
+                    )}
+                  </div>
                   <div className="col-status">
                     {
                       (() => {

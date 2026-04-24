@@ -18,6 +18,7 @@ import SiteSettings from "./settings/WebSettings";
 import OffersManager from "./coupons/OffersManager"
 import ManageUser from "./ManageUsers/ManageUser";
 import ThemeOptions from "./components/ThemeOptions/ThemeOptions";
+import ReturnOrdersPage from "./ReturnOrders/ReturnOrdersPage";
 
 // Protect routes
 const PrivateRoute = ({ children }) => {
@@ -92,6 +93,20 @@ const App = () => {
           </PrivateRoute>
         }
       />
+
+
+
+   <Route
+        path="/returns"
+        element={
+          <PrivateRoute>
+            <DashboardLayout>
+              <ReturnOrdersPage />
+            </DashboardLayout>
+          </PrivateRoute>
+        }
+      />
+
 
       {/* ---- Dynamic Order Status ---- */}
       <Route
@@ -197,7 +212,7 @@ const App = () => {
 />
 
            <Route
-        path="/manage-user"   // ✅ FIXED (lowercase + hyphen)
+        path="/manage-user"   
         element={
           <PrivateRoute>
             <DashboardLayout>
