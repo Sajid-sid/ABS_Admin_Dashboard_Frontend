@@ -1,17 +1,15 @@
-import { useState, useEffect, useCallback } from "react";
-import "./OffersManager.css";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
 // ── API ENDPOINTS ─────────────────────────
-const PUBLIC_API = `${BASE_URL}/api/offers/public`; // for GET only
-const ADMIN_API = `${BASE_URL}/api/offers`;         // for admin CRUD
+const PUBLIC_API = `${BASE_URL}/api/offers/public`;
+const ADMIN_API = `${BASE_URL}/api/offers`;
 
 // ── API HELPER ─────────────────────────
 const api = async (url, options = {}) => {
   try {
     const token = localStorage.getItem("token");
-
     const res = await fetch(url, {
       headers: {
         "Content-Type": "application/json",
@@ -22,41 +20,36 @@ const api = async (url, options = {}) => {
 
     const text = await res.text();
     if (!text) return { success: false, message: "Empty response" };
-
     return JSON.parse(text);
   } catch (err) {
+    console.error("API Error:", err);
     return { success: false, message: "Network error" };
   }
-};
-
-const iconBtn = {
-  padding: "6px 10px",
-  margin: "0 4px",
-  cursor: "pointer",
-  border: "none",
-  background: "#eee",
-  borderRadius: "6px",
 };
 
 // ── HELPERS ─────────────────────────
 const formatDate = (d) => (d ? new Date(d).toLocaleDateString("en-IN") : "—");
 const isExpired = (d) => d && new Date(d) < new Date();
-const getId = (o) => o._id || o.id; // universal id fix
 
 // ── EMPTY FORM ──────────────────────
 const EMPTY_FORM = {
   coupon_code: "",
-   title: "",
+  title: "",
   buy_qty: "",
   get_qty: "",
-  uses_per_user: "",
+  uses_per_user: "1",
   expiry_date: "",
   first_order_only: false,
-  category: "",
-    is_active: true,
+  category: [],
+  is_active: true,
 };
 
-// ── COMPONENT ──────────────────────
+const normalize = (val = "") =>
+  String(val)
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .trim();
+    
 export default function OfferManager() {
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -66,228 +59,315 @@ export default function OfferManager() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [toast, setToast] = useState(null);
+  const CATEGORY_OPTIONS = ["Necklaces", "Rings", "Earrings","Braceletes"];
+  const [catOpen, setCatOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
-  const notify = (msg, type = "success") => setToast({ msg, type });
+  const notify = (msg, type = "success") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+  const getOfferId = (offer) => {
+  return Number(offer?.id ?? offer?._id ?? null);
+};
+
+useEffect(() => {
+  const handleClickOutside = (e) => {
+    if (!dropdownRef.current) return;
+
+    if (!dropdownRef.current.contains(e.target)) {
+      setCatOpen(false);
+    }
+  };
+
+  document.addEventListener("mousedown", handleClickOutside);
+
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+}, []);
 
   // ── LOAD OFFERS ─────────────────────
-  const load = useCallback(async () => {
-    setLoading(true);
-    const res = await api(PUBLIC_API); // Only public GET
-     console.log("📦 Offers API Response:", res);
+const loadOffers = useCallback(async () => {
+  setLoading(true);
 
-  (res.offers ?? []).forEach((o) => {
-    console.log("🎯 Offer:", {
-      id: o.id,
-      title: o.title,
-      coupon: o.coupon_code,
-      active: o.is_active,
-    });
-  });
-    if (res.success) {
-      const normalized = (res.offers || []).map((o) => ({ ...o, _id: getId(o) }));
-      setOffers(normalized);
-    } else {
-      notify(res.message, "error");
+  try {
+    const res = await api(PUBLIC_API);
+
+    if (!res.success) {
+      notify(res.message || "Failed to load offers", "error");
+      return;
     }
+
+    const cleaned = (res.offers || []).map((o) => {
+      let parsed = [];
+
+      try {
+        parsed = Array.isArray(o.category)
+          ? o.category
+          : JSON.parse(o.category || "[]");
+      } catch {
+        parsed = [];
+      }
+
+      return {
+        ...o,
+
+        // 🔥 FINAL NORMALIZED CATEGORY
+        category: parsed
+          .filter(Boolean)
+          .map(normalize),
+      };
+    });
+
+    setOffers(cleaned);
+  } catch (err) {
+    console.error("loadOffers error:", err);
+    notify("Something went wrong while loading offers", "error");
+  } finally {
     setLoading(false);
-  }, []);
+  }
+}, []);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    loadOffers();
+  }, [loadOffers]);
 
   // ── STATS ─────────────────────
   const stats = {
     total: offers.length,
     active: offers.filter((o) => o.is_active && !isExpired(o.expiry_date)).length,
+    inactive: offers.filter((o) => !o.is_active && !isExpired(o.expiry_date)).length,
     expired: offers.filter((o) => isExpired(o.expiry_date)).length,
     uses: offers.reduce((acc, o) => acc + (o.total_uses || 0), 0),
   };
 
   // ── CREATE ─────────────────────
   const openCreate = () => {
-    setForm(EMPTY_FORM);
+    setForm({ ...EMPTY_FORM, category: [] });
     setEditingId(null);
     setShowModal(true);
+    setCatOpen(false);
   };
 
   // ── EDIT ─────────────────────
-  const openEdit = (o) => {
-    const id = getId(o);
-    if (!id) return notify("Invalid offer", "error");
+const openEdit = (o) => {
+  const id = getOfferId(o);
 
-    setForm({
-      coupon_code: o.coupon_code,
-        title: o.title || "",
-      buy_qty: o.buy_qty,
-      get_qty: o.get_qty,
-      uses_per_user: o.uses_per_user || 1,
-      expiry_date: o.expiry_date?.slice(0, 10) || "",
-      first_order_only: !!o.first_order_only,
-        category: o.category || "",
-          is_active: o.is_active,
-    });
-    setEditingId(id);
-    setShowModal(true);
-  };
+  if (!id) {
+    notify("Invalid offer ID", "error");
+    return;
+  }
+
+  setEditingId(id);
+
+  let parsedCategory = [];
+
+  try {
+    parsedCategory = Array.isArray(o.category)
+      ? o.category
+      : JSON.parse(o.category || "[]");
+  } catch {
+    parsedCategory = [];
+  }
+
+  // 🔥 UI OPTIONS (single source of truth)
+  const CATEGORY_OPTIONS = [
+    "Necklaces",
+    "Rings",
+    "Earrings",
+    "Braceletes",
+  ];
+
+  // 🔥 NORMALIZED MATCHING (SAFE + CLEAN)
+  const normalizedCategory = parsedCategory
+    .map(normalize)
+    .map((cat) =>
+      CATEGORY_OPTIONS.find(
+        (opt) => normalize(opt) === cat
+      )
+    )
+    .filter(Boolean);
+
+  setForm({
+    coupon_code: o.coupon_code || "",
+    title: o.title || "",
+    buy_qty: o.buy_qty || "",
+    get_qty: o.get_qty || "",
+    uses_per_user: o.uses_per_user || "1",
+    expiry_date: o.expiry_date?.slice(0, 10) || "",
+    first_order_only: !!o.first_order_only,
+    is_active: !!o.is_active,
+
+    // ✅ clean mapped categories
+    category: normalizedCategory,
+  });
+
+  setShowModal(true);
+};
 
   // ── SAVE ─────────────────────
-  const handleSave = async () => {
-    if (!form.coupon_code.trim()) return notify("Coupon required", "error");
+const handleSave = async () => {
+  console.log("🟡 editingId RAW:", editingId);
 
+  const id = Number(editingId);
+  const isEdit = editingId !== null && editingId !== undefined;
 
-    const payload = {
-      ...form,
-      coupon_code: form.coupon_code.toUpperCase(),
-      title: form.title,
-      buy_qty: Number(form.buy_qty),
-      get_qty: Number(form.get_qty),
-      uses_per_user: Number(form.uses_per_user || 1),
-        category: form.category || null,
-      expiry_date: form.expiry_date || null,
-        is_active: form.is_active,
-    };
+  console.log("🟢 FINAL EDIT ID:", id, "isEdit:", isEdit);
 
-    const isEdit = !!editingId;
+  if (!form.coupon_code.trim()) {
+    return notify("Coupon code required", "error");
+  }
 
-    const res = await api(
-      isEdit ? `${ADMIN_API}/${editingId}` : ADMIN_API, // admin CRUD
-      { method: isEdit ? "PUT" : "POST", body: JSON.stringify(payload) }
-    );
+  if (isEdit && (!id || id <= 0)) {
+    return notify("Invalid offer ID", "error");
+  }
 
-    if (res.success) {
-      notify(isEdit ? "Updated!" : "Created!");
-      setShowModal(false);
-      setEditingId(null);
-      setForm(EMPTY_FORM);
-      load();
-    } else {
-      notify(res.message, "error");
-    }
+  const payload = {
+    coupon_code: form.coupon_code.toUpperCase(),
+    title: form.title,
+    buy_qty: Number(form.buy_qty),
+    get_qty: Number(form.get_qty),
+    uses_per_user: Number(form.uses_per_user) || 1,
+    expiry_date: form.expiry_date || null,
+    first_order_only: form.first_order_only,
+    is_active: form.is_active,
+    category: form.category || [],
   };
 
-  // ── TOGGLE ─────────────────────
-  const toggle = async (o) => {
-    const id = getId(o);
-    if (!id) return notify("Invalid ID", "error");
+  const url = isEdit ? `${ADMIN_API}/${id}` : ADMIN_API;
 
-    const res = await api(`${ADMIN_API}/${id}/toggle`, { method: "PATCH" }); // admin toggle
-    if (res.success) load();
-    else notify(res.message, "error");
+  console.log("📦 REQUEST:", {
+    url,
+    method: isEdit ? "PUT" : "POST",
+    payload,
+  });
+
+  const res = await api(url, {
+    method: isEdit ? "PUT" : "POST",
+    body: JSON.stringify(payload),
+  });
+
+  console.log("🟡 RESPONSE:", res);
+
+  if (res.success) {
+    notify(isEdit ? "Updated!" : "Created!");
+    setShowModal(false);
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    loadOffers();
+  } else {
+    notify(res.message || "Update failed", "error");
+  }
+};
+
+  // ── TOGGLE STATUS ─────────────────────
+  const toggleStatus = async (o) => {
+    const id = o.id || o._id;
+    if (!id) return notify("Invalid ID", "error");
+    const res = await api(`${ADMIN_API}/${id}/toggle`, { method: "PATCH" });
+    if (res.success) loadOffers();
+    else notify(res.message, );
   };
 
   // ── DELETE ─────────────────────
-  const remove = async (o) => {
-    const id = getId(o);
+  const deleteOffer = async (o) => {
+    const id = o.id || o._id;
     if (!id) return notify("Invalid ID", "error");
     if (!window.confirm("Delete this offer?")) return;
-
     const res = await api(`${ADMIN_API}/${id}`, { method: "DELETE" });
     if (res.success) {
       notify("Deleted");
-      load();
+      loadOffers();
     } else {
-      notify(res.message, "error");
-    } 
+      notify(res.message, );
+    }
   };
 
-  const Badge = ({ children, type = "default" }) => {
-    const colors = {
-      default: "#e5e7eb",
-      success: "#22c55e",
-      danger: "#ef4444",
-      warning: "#f59e0b",
+  // ── HANDLE CATEGORY CHANGE ─────────────────────
+const handleCategoryChange = (category) => {
+  setForm((prev) => {
+    const norm = normalize(category);
+
+    const exists = prev.category
+      .map(normalize)
+      .includes(norm);
+
+    const updated = exists
+      ? prev.category.filter((c) => normalize(c) !== norm)
+      : [...prev.category, category];
+
+    return {
+      ...prev,
+      category: updated,
     };
-    return (
-      <span
-        style={{
-          padding: "4px 10px",
-          borderRadius: "999px",
-          fontSize: 12,
-          fontWeight: 600,
-          background: colors[type],
-          color: "#fff",
-        }}
-      >
-        {children}
-      </span>
-    );
-  };
+  });
+};
 
-  // ── FILTER ─────────────────────
-  const filtered = offers.filter((o) => {
-    const exp = isExpired(o.expiry_date);
-    const matchSearch = (o.coupon_code || "").toLowerCase().includes(search.toLowerCase());
-    const matchFilter =
-      filter === "all"
-        ? true
-        : filter === "active"
-        ? o.is_active && !exp
-        : filter === "expired"
-        ? exp
-        : !o.is_active;
-    return matchSearch && matchFilter;
+  // ── FILTER OFFERS ─────────────────────
+  const filteredOffers = offers.filter((o) => {
+    const expired = isExpired(o.expiry_date);
+    const matchesSearch = o.coupon_code?.toLowerCase().includes(search.toLowerCase());
+    const matchesFilter = filter === "all" ? true
+      : filter === "active" ? o.is_active && !expired
+      : filter === "inactive" ? !o.is_active && !expired
+      : filter === "expired" ? expired : true;
+    return matchesSearch && matchesFilter;
   });
 
-  // ── UI ─────────────────────
   return (
-    <div className="offer-manager">
-      <h2>🎁 Offer Manager</h2>
+    <div style={{ padding: "20px", maxWidth: "1400px", margin: "0 auto" }}>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
+        <h2 style={{ margin: 0, fontSize: "28px" }}>🎁 Offer Manager</h2>
+        <button
+          onClick={openCreate}
+          style={{
+            padding: "10px 20px",
+            borderRadius: 10,
+            border: "none",
+            background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
+            color: "#fff",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          + New Offer
+        </button>
+      </div>
 
-      <button
-        onClick={openCreate}
-        style={{
-          padding: "10px 20px",
-          borderRadius: 10,
-          border: "none",
-          background: "linear-gradient(135deg,#6366f1,#8b5cf6)",
-          color: "#fff",
-          fontWeight: 700,
-          fontSize: 14,
-          cursor: "pointer",
-          boxShadow: "0 4px 14px rgba(99,102,241,.35)",
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          marginLeft: "900px",
-          marginBottom: "40px",
-        }}
-      >
-        + New Offer
-      </button>
-
-      {/* STATS */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 28 }}>
+      {/* Stats Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 16, marginBottom: 28 }}>
         {[
           { label: "Total Offers", value: stats.total, color: "#6366f1", bg: "#eef2ff", icon: "🎟️" },
           { label: "Active", value: stats.active, color: "#10b981", bg: "#d1fae5", icon: "✅" },
+          { label: "Inactive", value: stats.inactive, color: "#f59e0b", bg: "#fef3c7", icon: "⏸️" },
           { label: "Expired", value: stats.expired, color: "#ef4444", bg: "#fef2f2", icon: "⏰" },
           { label: "Total Uses", value: stats.uses, color: "#f59e0b", bg: "#fef3c7", icon: "📊" },
         ].map((s) => (
-          <div key={s.label} style={{ background: "#fff", borderRadius: 14, padding: "20px 22px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: 16 }}>
+          <div key={s.label} style={{ background: "#fff", borderRadius: 14, padding: "20px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: 16 }}>
             <div style={{ width: 48, height: 48, borderRadius: 12, background: s.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>{s.icon}</div>
             <div>
-              <div style={{ fontSize: 26, fontWeight: 800, color: s.color, lineHeight: 1 }}>{s.value}</div>
-              <div style={{ fontSize: 12, color: "#64748b", marginTop: 4, fontWeight: 500 }}>{s.label}</div>
+              <div style={{ fontSize: 26, fontWeight: 800, color: s.color }}>{s.value}</div>
+              <div style={{ fontSize: 12, color: "#64748b" }}>{s.label}</div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* FILTER + TABLE */}
+      {/* Search and Filter */}
       <div style={{ background: "#fff", borderRadius: 14, border: "1px solid #e2e8f0", overflow: "hidden" }}>
         <div style={{ padding: "16px 20px", borderBottom: "1px solid #f1f5f9", display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="🔍  Search by code…"
-            style={{ padding: "9px 14px", borderRadius: 8, border: "1.5px solid #e2e8f0", fontSize: 14, width: 220, transition: "all .2s" }}
+            placeholder="🔍 Search by code..."
+            style={{ padding: "9px 14px", borderRadius: 8, border: "1.5px solid #e2e8f0", fontSize: 14, width: 220 }}
           />
           <div style={{ display: "flex", gap: 4 }}>
             {["all", "active", "inactive", "expired"].map((f) => (
               <button
                 key={f}
-                className="tab-btn"
                 onClick={() => setFilter(f)}
                 style={{
                   padding: "8px 16px",
@@ -307,139 +387,182 @@ export default function OfferManager() {
             ))}
           </div>
           <span style={{ marginLeft: "auto", color: "#94a3b8", fontSize: 13 }}>
-            {filtered.length} coupon{filtered.length !== 1 ? "s" : ""}
+            {filteredOffers.length} coupon{filteredOffers.length !== 1 ? "s" : ""}
           </span>
         </div>
 
+        {/* Table */}
         {loading ? (
-          <div style={{ padding: 48, textAlign: "center", color: "#94a3b8" }}>Loading offers…</div>
-        ) : filtered.length === 0 ? (
-          <div style={{ padding: 64, textAlign: "center", color: "#94a3b8" }}>
+          <div style={{ padding: 48, textAlign: "center" }}>Loading offers...</div>
+        ) : filteredOffers.length === 0 ? (
+          <div style={{ padding: 64, textAlign: "center" }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>🎟️</div>
-            <p style={{ fontWeight: 600, color: "#475569" }}>No offers found</p>
-            <p style={{ fontSize: 14, marginTop: 4 }}>Try adjusting your filters or create a new coupon</p>
+            <p>No offers found</p>
           </div>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>BOGO</th>
-                <th>Title</th>
-                 <th>Category</th>
-                <th>Expiry</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((o) => {
-                const exp = isExpired(o.expiry_date);
-                return (
-                  <tr key={getId(o) || o.coupon_code}>
-                    <td>{o.coupon_code}</td>
-                    <td>Buy {o.buy_qty} Get {o.get_qty}</td>
-                    <td>{o.uses_per_user || 1}</td>
-                    <td>{o.title}</td>
-                    <td>{o.category || "All"}</td>
-                    <td style={{ color: exp ? "red" : "black" }}>{formatDate(o.expiry_date)}</td>
-                    <td>
-                      <span className={o.is_active ? "active" : "inactive"}>
-                        {exp ? "Expired" : o.is_active ? "Active" : "Inactive"}
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+                  <th style={{ padding: "16px", textAlign: "left" }}>Code</th>
+                  <th style={{ padding: "16px", textAlign: "left" }}>Title</th>
+                 <th style={{ padding: "16px", textAlign: "left" }}>BOGO</th>
+<th style={{ padding: "16px", textAlign: "left" }}>Uses/User</th>
+<th style={{ padding: "16px", textAlign: "left" }}>Category</th>
+                  <th style={{ padding: "16px", textAlign: "left" }}>Expiry</th>
+                  <th style={{ padding: "16px", textAlign: "left" }}>Status</th>
+                  <th style={{ padding: "16px", textAlign: "left" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredOffers.map((offer) => (
+                  <tr key={offer.id || offer._id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                    <td style={{ padding: "16px", fontWeight: 500 }}>{offer.coupon_code}</td>
+                    <td style={{ padding: "16px" }}>{offer.title}</td>
+                    <td style={{ padding: "16px" }}>
+  Buy {offer.buy_qty} Get {offer.get_qty}
+</td>
+
+<td style={{ padding: "16px", fontWeight: 600 }}>
+  {offer.uses_per_user ?? 1}
+</td>
+                    <td style={{ padding: "16px" }}>
+                      {Array.isArray(offer.category) && offer.category.length > 0 ? (
+                        offer.category.map((cat, i) => (
+                          <span
+                            key={i}
+                            style={{
+                              background: "#eef2ff",
+                              color: "#6366f1",
+                              padding: "4px 8px",
+                              borderRadius: "6px",
+                              marginRight: "5px",
+                              fontSize: "12px",
+                              fontWeight: "600",
+                              display: "inline-block",
+                              marginBottom: "4px",
+                            }}
+                          >
+                            {cat}
+                          </span>
+                        ))
+                      ) : (
+                        <span style={{ color: "#94a3b8" }}>—</span>
+                      )}
+                    </td>
+                    <td style={{ padding: "16px", color: isExpired(offer.expiry_date) ? "#ef4444" : "#475569" }}>
+                      {formatDate(offer.expiry_date)}
+                    </td>
+                    <td style={{ padding: "16px" }}>
+                      <span style={{
+                        padding: "4px 10px",
+                        borderRadius: "999px",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        background: isExpired(offer.expiry_date) ? "#fef2f2" : (offer.is_active ? "#d1fae5" : "#fef3c7"),
+                        color: isExpired(offer.expiry_date) ? "#ef4444" : (offer.is_active ? "#10b981" : "#f59e0b"),
+                      }}>
+                        {isExpired(offer.expiry_date) ? "Expired" : (offer.is_active ? "Active" : "Inactive")}
                       </span>
                     </td>
-                    <td>
-                      <button onClick={() => openEdit(o)}>✏️Edit</button>
-                      <button className="action-btn" onClick={() => toggle(o)} title={o.is_active ? "Deactivate" : "Activate"} style={{ ...iconBtn, fontSize: 15, transition: "opacity .15s" }}>
-                        {o.is_active ? "⏸" : "▶️"}
+                    <td style={{ padding: "16px" }}>
+                      <button onClick={() => openEdit(offer)} style={{ marginRight: "8px", padding: "6px 10px", cursor: "pointer" }}>✏️ </button>
+                      <button onClick={() => toggleStatus(offer)} style={{ marginRight: "8px", padding: "6px 10px", cursor: "pointer" }}>
+                        {offer.is_active ? "⏸" : "▶️"}
                       </button>
-                      <button onClick={() => remove(o)}>🗑Delete</button>
+                      <button onClick={() => deleteOffer(offer)} style={{ padding: "6px 10px", cursor: "pointer" }}>🗑 </button>
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
-      {/* MODAL */}
+      {/* Modal */}
       {showModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", animation: "fadeIn .2s ease" }} onClick={() => setShowModal(false)}>
-          <div style={{ background: "#fff", borderRadius: 20, padding: 36, width: 520, boxShadow: "0 24px 80px rgba(0,0,0,.2)", animation: "slideUp .25s ease", maxHeight: "90vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
-              <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#0f172a" }}>{editingId ? "Edit Offer" : "Create Offer"}</h2>
-              <button onClick={() => setShowModal(false)} style={iconBtn}>×</button>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setShowModal(false)}>
+          <div style={{ background: "#fff", borderRadius: 20, padding: 36, width: 520, maxHeight: "90vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
+            <h2>{editingId ? "Edit Offer" : "Create Offer"}</h2>
+            
+            <div style={{ marginBottom: 15 }}>
+              <label>Coupon Code *</label>
+              <input value={form.coupon_code} onChange={(e) => setForm({ ...form, coupon_code: e.target.value })} style={{ width: "100%", padding: 8 }} />
             </div>
 
-            <div className="form-group">
-              <label>Coupon Code</label>
-              <input placeholder="Enter coupon code" value={form.coupon_code} onChange={(e) => setForm({ ...form, coupon_code: e.target.value })} />
-            </div>
-  <div className="form-group">
-              <label>title</label>
-              <input placeholder="Enter title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-            </div>
-            <div className="form-group">
-              <label>Buy Quantity</label>
-              <input type="number" placeholder="Enter buy quantity" value={form.buy_qty} onChange={(e) => setForm({ ...form, buy_qty: e.target.value })} />
+            <div style={{ marginBottom: 15 }}>
+              <label>Title</label>
+              <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} style={{ width: "100%", padding: 8 }} />
             </div>
 
-            <div className="form-group">
-              <label>Get Quantity</label>
-              <input type="number" placeholder="Enter get quantity" value={form.get_qty} onChange={(e) => setForm({ ...form, get_qty: e.target.value })} />
-            </div>
-             <label>Category</label>
-
-<select
-  value={form.category}
-  onChange={(e) =>
-    setForm({ ...form, category: e.target.value })
-  }
->
-  
-  <option value="">All Categories</option>
-  <option value="Necklaces">Necklace</option>
-  <option value="rings">rings</option>
-  <option value="earrings">earrings</option>
-</select>
-            <div className="form-group">
-              <label>Expiry Date</label>
-              <input type="date" value={form.expiry_date} onChange={(e) => setForm({ ...form, expiry_date: e.target.value })} />
+            <div style={{ marginBottom: 15 }}>
+              <label>Buy Quantity *</label>
+              <input type="number" value={form.buy_qty} onChange={(e) => setForm({ ...form, buy_qty: e.target.value })} style={{ width: "100%", padding: 8 }} />
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <label style={checkLabel}>
-                <input type="checkbox" checked={form.first_order_only} onChange={(e) => setForm((f) => ({ ...f, first_order_only: e.target.checked }))} style={{ accentColor: "#6366f1", width: 16, height: 16 }} />
-                <div>
-                  <span style={{ fontWeight: 600, color: "#1e293b", fontSize: 14, marginTop: "20px" }}>First order only</span>
-                  <p style={{ margin: "2px 0 0", fontSize: 12, color: "#64748b" }}>Only valid for a customer's first purchase</p>
+            <div style={{ marginBottom: 15 }}>
+              <label>Get Quantity *</label>
+              <input type="number" value={form.get_qty} onChange={(e) => setForm({ ...form, get_qty: e.target.value })} style={{ width: "100%", padding: 8 }} />
+            </div>
+            <div style={{ marginBottom: 15 }}>
+  <label>Uses Per User</label>
+  <input
+    type="number"
+    min="1"
+    value={form.uses_per_user}
+    onChange={(e) =>
+      setForm({ ...form, uses_per_user: e.target.value })
+    }
+    style={{ width: "100%", padding: 8 }}
+  />
+</div>
+
+            <div style={{ marginBottom: 15 }} ref={dropdownRef}>
+              <label>Category</label>
+              <div onClick={() => setCatOpen(!catOpen)} style={{ border: "1px solid #ccc", padding: 8, borderRadius: 4, cursor: "pointer" }}>
+                {form.category.length > 0 ? form.category.join(", ") : "Select categories"}
+              </div>
+              {catOpen && (
+                <div style={{ border: "1px solid #ccc", marginTop: 5, padding: 10, borderRadius: 4, background: "#fff" }}>
+                  {CATEGORY_OPTIONS.map(cat => (
+                    <label key={cat} style={{ display: "block", marginBottom: 5 }}>
+                      <input type="checkbox"checked={form.category.map(c => c.toLowerCase()).includes(cat.toLowerCase())} onChange={() => handleCategoryChange(cat)} />
+                      <span style={{ marginLeft: 8 }}>{cat}</span>
+                    </label>
+                  ))}
                 </div>
+              )}
+            </div>
+
+            <div style={{ marginBottom: 15 }}>
+              <label>Expiry Date</label>
+              <input type="date" value={form.expiry_date} onChange={(e) => setForm({ ...form, expiry_date: e.target.value })} style={{ width: "100%", padding: 8 }} />
+            </div>
+
+            <div style={{ marginBottom: 15 }}>
+              <label>
+                <input type="checkbox" checked={form.first_order_only} onChange={(e) => setForm({ ...form, first_order_only: e.target.checked })} />
+                <span style={{ marginLeft: 8 }}>First order only</span>
               </label>
             </div>
 
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button onClick={handleSave}>Save</button>
-              <button onClick={() => setShowModal(false)}>Cancel</button>
+           
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={handleSave} style={{ padding: "10px 20px", background: "#6366f1", color: "#fff", border: "none", borderRadius: 5, cursor: "pointer" }}>Save</button>
+              <button onClick={() => setShowModal(false)} style={{ padding: "10px 20px", background: "#ccc", border: "none", borderRadius: 5, cursor: "pointer" }}>Cancel</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* TOAST */}
-      {toast && <div className={`toast ${toast.type === "error" ? "error" : ""}`}>{toast.msg}</div>}
+      {/* Toast */}
+      {toast && (
+        <div style={{ position: "fixed", bottom: 20, right: 20, padding: "12px 20px", background: toast.type === "error" ? "#ef4444" : "#10b981", color: "#fff", borderRadius: 8 }}>
+          {toast.msg}
+        </div>
+      )}
     </div>
   );
 }
-
-const checkLabel = {
-  display: "flex",
-  alignItems: "flex-start",
-  gap: 10,
-  cursor: "pointer",
-  padding: "12px 14px",
-  borderRadius: 10,
-  border: "1.5px solid #e2e8f0",
-  transition: "border-color .2s",
-  marginTop: "10px",
-};
