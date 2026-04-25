@@ -11,7 +11,46 @@ const SIDEBAR_ITEMS = [
   { id: "social",  label: "Social Links", icon: "🌐", desc: "Social media URLs" },
 ];
 
-const FONTS = ["Poppins", "Roboto", "Inter", "Montserrat", "DM Sans", "Nunito"];
+const FONTS = [
+  "Poppins",
+  "Roboto",
+  "Inter",
+  "Montserrat",
+  "Nunito",
+  "Verdana",
+  "Impact",
+  "Open Sans",
+  "Lato",
+  "Raleway",
+  "Ubuntu",
+  "Merriweather",
+  "Playfair Display",
+  "Oswald",
+  "Rubik",
+  "Mulish",
+  "Quicksand",
+  "Fira Sans",
+  "Work Sans",
+  "PT Sans",
+  "Source Sans Pro",
+  "Noto Sans",
+  "DM Sans",
+  "Kanit",
+  "Bebas Neue",
+  "Josefin Sans",
+  "Manrope",
+  "Cabin",
+  "Titillium Web",
+  "Arimo",
+  "Inconsolata",
+  "Courier New",
+  "Georgia",
+  "Times New Roman",
+  "Trebuchet MS",
+  "Comic Sans MS",
+  "Arial",
+  "Tahoma",
+];
 
 const ColorField = ({ label, name, value, onChange }) => (
   <div className="fieldGroup">
