@@ -59,7 +59,7 @@ export default function OfferManager() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("all");
   const [toast, setToast] = useState(null);
-  const CATEGORY_OPTIONS = ["Necklaces", "Rings", "Earrings","Braceletes"];
+  const CATEGORY_OPTIONS = ["Necklaces", "Rings", "Earrings","Braceletes","B1G1"];
   const [catOpen, setCatOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -177,6 +177,7 @@ const openEdit = (o) => {
     "Rings",
     "Earrings",
     "Braceletes",
+    "B1G1"
   ];
 
   // 🔥 NORMALIZED MATCHING (SAFE + CLEAN)
