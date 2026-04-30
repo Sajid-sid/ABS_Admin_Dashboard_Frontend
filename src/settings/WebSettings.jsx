@@ -9,7 +9,10 @@ const SIDEBAR_ITEMS = [
   { id: "font",    label: "Typography",   icon: "🔤", desc: "Font family & style" },
   { id: "footer",  label: "Footer",       icon: "📄", desc: "Footer content" },
   { id: "social",  label: "Social Links", icon: "🌐", desc: "Social media URLs" },
+  { id: "blog",    label: "Blog",         icon: "📝", desc: "Create and manage blog posts" },
 ];
+
+
 
 const FONTS = [
   "Poppins",
@@ -101,6 +104,49 @@ const WebSettings = () => {
   const [logo, setLogo] = useState(null);
   const [logoPreview, setLogoPreview] = useState("");
 
+  const [blog, setBlog] = useState({
+  title: "",
+  description: "",
+  image: null,
+});
+
+const [blogPreview, setBlogPreview] = useState("");
+
+
+const handleBlogChange = (e) => {
+  setBlog({ ...blog, [e.target.name]: e.target.value });
+  setHasChanges(true);
+};
+
+const handleBlogImage = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  setBlog({ ...blog, image: file });
+  setBlogPreview(URL.createObjectURL(file));
+  setHasChanges(true);
+};
+
+const saveSettings = async () => {
+  const form = new FormData();
+
+  // settings
+  Object.keys(settings).forEach((k) => form.append(k, settings[k]));
+
+  // logo
+  if (logo) form.append("logo", logo);
+
+  //  blog
+  form.append("blog_title", blog.title);
+  form.append("blog_description", blog.description);
+  if (blog.image) form.append("blog_image", blog.image);
+
+  await axios.put(`${BASE_URL}/api/settings`, form);
+
+  alert("Settings saved");
+  setHasChanges(false);
+};
+
   useEffect(() => {
     fetchSettings();
   }, []);
@@ -128,14 +174,7 @@ const WebSettings = () => {
     setHasChanges(true);
   };
 
-  const saveSettings = async () => {
-    const form = new FormData();
-    Object.keys(settings).forEach((k) => form.append(k, settings[k]));
-    if (logo) form.append("logo", logo);
-    await axios.put(`${BASE_URL}/api/settings`, form);
-    alert("Settings saved");
-    setHasChanges(false);
-  };
+
 
   const alertTexts = [1, 2, 3, 4, 5]
     .map((n) => settings[`alert_${n}_text`])
@@ -229,6 +268,52 @@ const WebSettings = () => {
             )}
           </div>
         );
+
+        case "blog":
+  return (
+    <div className="cardBlock">
+      <h4>Create Blog</h4>
+
+      {/* Title */}
+      <div className="fieldGroup">
+        <label className="fieldLabel">Blog Title</label>
+        <input
+          type="text"
+          name="title"
+          placeholder="Enter blog title"
+          value={blog.title}
+          onChange={handleBlogChange}
+        />
+      </div>
+
+      {/* Description */}
+      <div className="fieldGroup">
+        <label className="fieldLabel">Description</label>
+        <textarea
+          name="description"
+          placeholder="Write your blog content..."
+          value={blog.description}
+          onChange={handleBlogChange}
+          rows={5}
+        />
+      </div>
+
+      {/* Image Upload */}
+      <div className="fieldGroup">
+        <label className="fieldLabel">Blog Image</label>
+        <input type="file" accept="image/*" onChange={handleBlogImage} />
+      </div>
+
+      {/* Preview */}
+      {(blogPreview || blog.title || blog.description) && (
+        <div className="blogPreviewCard">
+          {blogPreview && <img src={blogPreview} alt="preview" />}
+          <h5>{blog.title || "Blog Title"}</h5>
+          <p>{blog.description || "Blog description preview..."}</p>
+        </div>
+      )}
+    </div>
+  );
 
       case "theme":
         return (
