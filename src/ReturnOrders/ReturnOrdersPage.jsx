@@ -381,7 +381,7 @@ const css = `
   .rop-return-video a { color: var(--rop-blue); text-decoration: none; }
   .rop-return-video a:hover { text-decoration: underline; }
 
-  .rop-item-actions { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+
   .rop-approve-btn {
     background: linear-gradient(135deg, #10d98e20, #10d98e10);
     border: 1px solid #10d98e40;
@@ -429,6 +429,7 @@ export default function ReturnOrdersPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [selectedReturns, setSelectedReturns] = useState([]);
 
   useEffect(() => { fetchReturnOrders(page); }, [page]);
 
@@ -456,6 +457,14 @@ export default function ReturnOrdersPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleReturnSelection = (returnId) => {
+    setSelectedReturns((prev) =>
+      prev.includes(returnId)
+        ? prev.filter((id) => id !== returnId)
+        : [...prev, returnId]
+    );
   };
 
   /* ── UPDATE RETURN STATUS (Approve / Reject) ── */
@@ -496,9 +505,45 @@ export default function ReturnOrdersPage() {
     }
   };
 
+  const approveSelectedReturns = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(
+        `${API_BASE}/api/returns/bulk-approve`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            returnIds: selectedReturns,
+          }),
+        }
+      );
+
+      const json = await res.json();
+
+      if (!json.success) {
+        throw new Error(json.message);
+      }
+
+      alert("Returns approved successfully");
+
+      setSelectedReturns([]);
+
+      fetchReturnOrders(page);
+
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    }
+  };
+
   const returnCount = (order) => order.items.filter(i => i.return).length;
 
-  
+
 
   return (
     <>
@@ -638,6 +683,28 @@ export default function ReturnOrdersPage() {
 
                   return (
                     <div key={item.id} className={`rop-item${hasReturn ? " has-return" : ""}`}>
+                      {hasReturn && isPending && (
+                        <label
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            marginRight: "12px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedReturns.includes(item.return.id)}
+                            onChange={() => toggleReturnSelection(item.return.id)}
+                            style={{
+                              width: "18px",
+                              height: "18px",
+                              accentColor: "#10d98e",
+                              cursor: "pointer",
+                            }}
+                          />
+                        </label>
+                      )}
 
                       {item.imageUrl ? (
                         <img src={item.imageUrl} alt={item.productName} className="rop-item-img" />
@@ -673,40 +740,83 @@ export default function ReturnOrdersPage() {
                         )}
                       </div>
 
-                      <div className="rop-item-actions">
-                        {/* Approve */}
+
+                      {selectedReturns.length > 0 && (
                         <button
                           className="rop-approve-btn"
-                          disabled={!hasReturn || !isPending}
-                          onClick={() => updateReturnStatus(item.return.id, "Approved")}
-                          title={
-                            !hasReturn ? "No return request" :
-                              !isPending ? `Status: ${item.return.status}` :
-                                "Approve this return"
-                          }
+                          style={{
+                            width: "100%",
+                            marginTop: "16px",
+                            padding: "14px",
+                            fontSize: "14px",
+                            fontWeight: "600"
+                          }}
+                          onClick={() => approveSelectedReturns()}
                         >
-                          {!hasReturn ? "No Return" : isPending ? "✓ Approve" : item.return.status}
+                          ✓ Approve Selected Returns ({selectedReturns.length})
                         </button>
-
-                        {/* Reject — only shown when pending */}
-                        {hasReturn && isPending && (
-                          <button
-                            className="rop-approve-btn"
-                            style={{
-                              background: "linear-gradient(135deg,#ff4d6d20,#ff4d6d10)",
-                              border: "1px solid #ff4d6d40",
-                              color: "var(--rop-red)",
-                            }}
-                            onClick={() => updateReturnStatus(item.return.id, "Rejected")}
-                          >
-                            ✕ Reject
-                          </button>
-                        )}
-                      </div>
-
+                      )}
                     </div>
                   );
                 })}
+
+                {selectedReturns.length > 0 && (
+                  <div
+                    style={{
+                      position: "sticky",
+                      bottom: 0,
+                      background: "#13151a",
+                      borderTop: "1px solid #252830",
+                      padding: "16px",
+                      marginTop: "18px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      gap: "14px",
+                      zIndex: 20,
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: "#e8eaf0",
+                        fontSize: "13px",
+                        fontFamily: "var(--rop-font-mono)",
+                      }}
+                    >
+                      {selectedReturns.length} return item
+                      {selectedReturns.length > 1 ? "s" : ""} selected
+                    </div>
+
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      <button
+                        className="rop-approve-btn"
+                        style={{
+                          padding: "12px 18px",
+                          fontSize: "13px",
+                          fontWeight: "600",
+                        }}
+                        onClick={approveSelectedReturns}
+                      >
+                        ✓ Approve Selected
+                      </button>
+
+                      <button
+                        className="rop-approve-btn"
+                        style={{
+                          background: "#ff4d6d15",
+                          border: "1px solid #ff4d6d40",
+                          color: "#ff4d6d",
+                          padding: "12px 18px",
+                          fontSize: "13px",
+                          fontWeight: "600",
+                        }}
+                        onClick={() => setSelectedReturns([])}
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
