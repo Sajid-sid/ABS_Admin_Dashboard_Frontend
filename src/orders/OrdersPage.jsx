@@ -3,7 +3,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import "./OrdersPage.css";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const API_BASE = import.meta.env.VITE_API_URL;
 
 const STATUS_COLORS = {
   Pending: "#f59e0b",

@@ -6,7 +6,7 @@ import "./ProductDescription.css";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const ProductDescription = () => {
   const { id } = useParams();

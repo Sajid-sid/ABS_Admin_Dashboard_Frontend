@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "./AddProductCategory.css"; // You can reuse same CSS
+import "./AddProductCategory.css";
 
 const AddProductCategory = () => {
   const [formData, setFormData] = useState({

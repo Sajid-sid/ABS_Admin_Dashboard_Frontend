@@ -76,7 +76,7 @@ const ColorField = ({ label, name, value, onChange }) => (
 );
 
 const WebSettings = () => {
-  const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+  const BASE_URL = import.meta.env.VITE_API_URL;
 
   const [activeSection, setActiveSection] = useState("alerts");
   const [hasChanges, setHasChanges] = useState(false);

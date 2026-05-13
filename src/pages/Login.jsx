@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 
 
-const API_URL = import.meta.env.VITE_API_URL; // ✅ Read env variable
+const API_URL = import.meta.env.VITE_API_URL; 
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -31,7 +31,7 @@ const Login = () => {
 
       const data = await res.json();
 
-      console.log("✅ Login API Response:", data); // Debug log
+      
 
       if (res.ok) {
         dispatch(loginSuccess({ user: data.user, token: data.token }));

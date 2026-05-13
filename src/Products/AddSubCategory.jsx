@@ -9,7 +9,7 @@ import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy, }
 import { CSS } from "@dnd-kit/utilities";
 import { useNavigate } from "react-router-dom";
 const AddSubCategory = () => {
-  const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+  const BASE_URL = import.meta.env.VITE_API_URL;
   const navigate = useNavigate();
   const initialState = {
     productCategory: "",

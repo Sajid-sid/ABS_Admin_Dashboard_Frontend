@@ -5,7 +5,7 @@ import "./ManageUser.css";
 import { useSelector } from "react-redux";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 export default function ManageUser() {
   const [users, setUsers] = useState([]);

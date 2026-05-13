@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 // ── API ENDPOINTS ─────────────────────────
 const PUBLIC_API = `${BASE_URL}/api/offers/public`;

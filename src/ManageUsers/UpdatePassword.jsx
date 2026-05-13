@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import "./UpdatePassword.css";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 export default function UpdatePassword() {
   const navigate = useNavigate();

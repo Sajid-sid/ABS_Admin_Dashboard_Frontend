@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./StockInformation.css";
 
-// ✅ Load from .env
+
 const BASE_URL = import.meta.env.VITE_API_URL;
 const API_URL = `${BASE_URL}/api`;
 
@@ -64,7 +64,7 @@ export default function StockInformation() {
       const catRes = await axios.get(`${API_URL}/productCategories`);
       const subRes = await axios.get(`${API_URL}/subcategories`);
 
-      // ⭐ NEW — Fetch Confirmed + Pending counts
+    
       const bookingCounts = await fetchBookingCounts();
 
       const subList = subRes.data;
